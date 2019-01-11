@@ -1,0 +1,14 @@
+{
+  //"presets": ["@babel/preset-env"],
+  "presets":["es2015"],
+
+  "plugins": ["syntax-dynamic-import"], // "@babel/plugin-proposal-export-default-from"],
+  "sourceMaps": true,
+  "retainLines": true,
+  "env": {
+    "test": {
+      "plugins": ["dynamic-import-node","transform-es2015-modules-commonjs"]
+    }
+  }
+}
+
