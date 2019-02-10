@@ -3,16 +3,20 @@ const path = require('path');
 
 module.exports = {
   entry: './src/index.js',
-  mode: 'development',
+  // mode: 'development',
+ mode: 'production',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'adsoda.js',
-    library: 'adsoda'
-    //libraryTarget: 'umd',
-    //umdNamedDefine:true
+    library: 'adsoda',
+    libraryTarget: 'umd',
+    umdNamedDefine:true,
+    // https://stackoverflow.com/questions/49111086/webpack-4-universal-library-target
+    globalObject: `(typeof self !== 'undefined' ? self : this)`
+
   },//,
   optimization: {
-    //splitChunks:{      chuncks: 'all'    }
+  //  splitChunks:{      chunks: 'all'    },
     usedExports: true
   },
   module: {

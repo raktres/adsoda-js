@@ -1,11 +1,12 @@
 {
-  "name": "adsoda-js",
-  "version": "0.0.0",
-  "description": "ADSODA after a Greg Ferrar idea",
-  "main": "build/index.js",
+  "name": "adsoda",
+  "version": "0.0.6",
+  "description": "ADSODA - Arbitrary-Dimensional Solid Object Display Algorithm - after a Greg Ferrar algorithm",
+  "main": "dist/adsoda",
+  "typings": "dist/adsoda",
   "scripts": {
     "test": "jest",
-    "clean": "prettier --tab-width=4 --write ./src/*.js",
+    "clean": "prettier --tab-width=4 --write ./src/*.js ./test/*.js",
     "build": "webpack",
     "doc": "jsdoc  ./package.json  ./src/*.js",
     "lint": "eslint ./src"
@@ -17,17 +18,18 @@
   "keywords": [
     "adsoda",
     "4DStroll",
-    "4D"
+    "4D",
+    "TAK4D"
+
   ],
   "author": "Jeff Bigot",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/raktres/adsoda-js/issues"
   },
-  "homepage": {
-    "url": "https://github.com/raktres/adsoda-js#readme"
-  },
+  "homepage": "https://github.com/raktres/adsoda-js#readme",
   "devDependencies": {
+    "@babel/core": "^7.2.2",
     "@babel/plugin-proposal-export-default-from": "^7.2.0",
     "@babel/preset-env": "^7.2.3",
     "babel-cli": "^6.26.0",
