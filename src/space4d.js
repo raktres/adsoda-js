@@ -1,8 +1,18 @@
-//import * from "./halfspace.js";
+/**
+ * @file Describes ADSODA space4d
+ * @author Jeff Bigot <jeff@raktres.net> after Greg Ferrar
+ * @module space4d
+ */
+
 import { Space } from "./space.js";
-//export {default as Solid, createSolidFromHalfSpaces } from "./solid.js";
 import { Solid } from "./solid.js";
 
+/**
+ * return an array representing a 3D cube
+ * @param {number} min
+ * @param {number} min
+ * @returns cube 3D cube
+ */
 export function cube3D(min, max) {
     return new Solid(3, [
         [-1, 0, 0, max],
@@ -14,6 +24,13 @@ export function cube3D(min, max) {
     ]);
 }
 
+/**
+ * return an array representing a 4D cube
+ * @param {number} min
+ * @param {number} min
+ * @returns cube 4D cube
+
+ * */
 export function cube4D(min, max) {
     return new Solid(3, [
         [-1, 0, 0, 0, max],

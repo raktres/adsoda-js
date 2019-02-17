@@ -1,7 +1,21 @@
 import * as math from "mathjs";
+/**
+ * @file Describes ADSODA halfspace
+ * @author Jeff Bigot <jeff@raktres.net> after Greg Ferrar
+ * @module halfspace
+ * */
+
 import moize from "moize";
 import * as P from "./parameters";
 
+//|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//| Halfspace.cp
+//|
+//| This is the implementation of the Halfspace class.  An Halfspace is half of an n-space.
+//| it is described by the equation of the bounding hyperplane.  A point is considered
+//| to be inside the halfspace if the left side of the equation is greater than the
+//| right side.  The first n coefficients can also be viewed as the normal vector.
+//|_______________________________________________________________________________________
 
 /**
  *
@@ -10,7 +24,6 @@ import * as P from "./parameters";
  */
 //export function echelonBase(matrix) {
 export function echelon(matrix) {
-  
     const nbrows = matrix.length;
     const nbcolumns = matrix[0].length;
     let outmatrix = matrix.map(row => [...row]);
@@ -20,7 +33,8 @@ export function echelon(matrix) {
         if (nbcolumns <= lead) return outmatrix;
 
         var i = k;
-        while (outmatrix[i][lead] === 0) {
+        while (outmatrix[i][lead] == 0) {
+            // abs P_min ?
             i++;
             if (nbrows === i) {
                 i = k;
@@ -52,7 +66,6 @@ export function echelon(matrix) {
 
 //export const echelon = moize(echelonBase);
 
-
 /**
  *
  * @param {*} matrix
@@ -60,8 +73,9 @@ export function echelon(matrix) {
  */
 export function nonZeroRows(matrix) {
     return matrix.filter(
-    //  row => !row.every(val => Math.abs(val) < P.VERY_SMALL_NUM)
-        row => !row.every(val => val < P.VERY_SMALL_NUM && val > -P.VERY_SMALL_NUM )
+        //  row => !row.every(val => Math.abs(val) < P.VERY_SMALL_NUM)
+        row =>
+            !row.every(val => val < P.VERY_SMALL_NUM && val > -P.VERY_SMALL_NUM)
     );
 }
 
@@ -80,17 +94,17 @@ export function solution(matrix) {
 /**
  * Get constant value of the halfspace
  */
-export function getConstant(halfspace){
-    return halfspace[halfspace.length-1];
+export function getConstant(halfspace) {
+    return halfspace[halfspace.length - 1];
 }
 
 /**
- * 
- * @param {*} halfspace 
- * @param {*} i 
+ *
+ * @param {*} halfspace
+ * @param {*} i
  */
-export function getCoordinate(halfspace,i){
-    return halfspace[i] ;
+export function getCoordinate(halfspace, i) {
+    return halfspace[i];
 }
 
 /**
@@ -110,7 +124,6 @@ export function constantAdd(u, x) {
 export function positionPoint(halfspace, point) {
     return math.dot(halfspace, [...point, 1]);
 }
-
 
 /**
  *
@@ -150,25 +163,23 @@ export function intersectHyperplanes(hyperplanes) {
 export function amongIndex(l, a, b) {
     let extract = [[]];
     let ref = [];
-    for (let i=0 ; i<l;i++) {
-        ref[i]=i;
-    } 
+    for (let i = 0; i < l; i++) {
+        ref[i] = i;
+    }
     //const range = (start,end) => new Array(end - start +1).fill(undefined).map((value,index)=>index+start);
     for (const i in ref) {
         for (const j in extract) {
             extract.push(extract[j].concat(ref[i]));
         }
     }
-     
 
     return extract.filter(sub => sub.length >= a && sub.length <= b);
 }
 
 /**
- * 
+ *
  */
 export const moizeAmongIndex = moize(amongIndex);
-
 
 /**
  *
@@ -178,12 +189,13 @@ export const moizeAmongIndex = moize(amongIndex);
 export function isCornerEqual(corner1, corner2) {
     if (corner1 instanceof Array && corner2 instanceof Array) {
         for (let i = 0; i < corner1.length; i++) {
-            if ( Math.abs(corner1[i] - corner2[i]) > P.VERY_SMALL_NUM) {
+            if (Math.abs(corner1[i] - corner2[i]) > P.VERY_SMALL_NUM) {
                 return false;
             }
         }
         return true;
     } else {
-        return corner1 == corner2;
+        // return corner1 == corner2;
+        return Math.abs(corner1 - corner2) < P.VERY_SMALL_NUM;
     }
 }

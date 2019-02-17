@@ -10,7 +10,7 @@ import {
     getConstant,
     getCoordinate,
     among,
-    amongIndex, 
+    amongIndex,
     moizeAmongIndex,
     solution,
     constantAdd
@@ -24,7 +24,7 @@ describe("Tests of halfspace", () => {
     beforeEach(() => {
         //do something
     });
-    
+
     //TODO
     test("project", () => {
         const c = projectVector(a, 0);
@@ -32,20 +32,20 @@ describe("Tests of halfspace", () => {
     });
 
     test("constant add", () => {
-        const c = [1,2,3,4];
-        const d = constantAdd(c,4);
-        expect(d).toEqual([1,2,3,0]);
+        const c = [1, 2, 3, 4];
+        const d = constantAdd(c, 4);
+        expect(d).toEqual([1, 2, 3, 0]);
     });
 
     test("get constant ", () => {
-        const c = [1,2,3,4];
+        const c = [1, 2, 3, 4];
         const d = getConstant(c);
         expect(d).toEqual(4);
     });
 
     test("get coordinate ", () => {
-        const c = [1,2,3,4];
-        const d = getCoordinate(c,2);
+        const c = [1, 2, 3, 4];
+        const d = getCoordinate(c, 2);
         expect(d).toEqual(3);
     });
 
@@ -53,16 +53,14 @@ describe("Tests of halfspace", () => {
         const c = projectVector(a, 4);
         expect(c).toBeFalsy();
     }); */
-    
+
     test("amongIndex", () => {
-        
         const array2 = amongIndex(3, 2, 2);
         expect(array2.length).toEqual(3);
         const array13 = amongIndex(3, 1, 3);
         expect(array13.length).toEqual(7);
     });
     test("amongIndex Moize", () => {
-        
         let array2 = moizeAmongIndex(3, 2, 2);
         expect(array2.length).toEqual(3);
         const array13 = moizeAmongIndex(3, 1, 3);
@@ -82,7 +80,7 @@ describe("Tests of halfspace", () => {
             [0, 0, 0, 0],
             [-2, 0, -3, 22],
             [0, 0, 0, 22],
-            [0+ P.VERY_SMALL_NUM/10, 0-  P.VERY_SMALL_NUM/10, 0, 0]
+            [0 + P.VERY_SMALL_NUM / 10, 0 - P.VERY_SMALL_NUM / 10, 0, 0]
         ];
 
         //console.log("init"+JSON.stringify(matrix));

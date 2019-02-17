@@ -1,27 +1,27 @@
 /**
  * @file Describes ADSODA solids
  * @author Jeff Bigot <jeff@raktres.net> after Greg Ferrar
- *
+ * @class Solid
+ * @extends NDObject
+ * @requires lodash/cloneDeep
  */
 
 import { NDObject } from "./ndobject.js";
 import { Face } from "./face.js";
 import cloneDeep from "lodash/cloneDeep";
-import {  projectVector, isCornerEqual, moizeAmongIndex } from "./halfspace.js";
+import {
+    projectVector,
+    isCornerEqual,
+    moizeAmongIndex,
+    constantAdd
+} from "./halfspace.js";
 import * as P from "./parameters.js";
-
-/**
- * Creates a new solid.
- * @class Solid
- */
 
 class Solid extends NDObject {
     /*
-     * @class Solid
      * @constructor solid
      * @param {string} dimension nb of dimensions of the solid
      */
-
     constructor(dim, halfspaces = false) {
         super("solid");
         this.dimension = dim;
@@ -35,7 +35,7 @@ class Solid extends NDObject {
             let halffiltered = [];
 
             for (const half of halfspaces) {
-                const halffil = [...half].map(x=> parseFloat(x));
+                const halffil = [...half].map(x => parseFloat(x));
                 const exist = [...halffiltered].find(halff =>
                     isCornerEqual(halff, halffil)
                 );
@@ -48,24 +48,32 @@ class Solid extends NDObject {
             this.ensureAdjacencies();
         }
     }
-    /**
-     *
-     */
 
+    /**
+     * @returns JSON
+     */
     exportToJSON() {
         //let json = `{ name : "${this.name}" , dimension : ${this.dimension} , color : "${this.color}" , faces : { `;
         //this.faces.forEach( face =>
-        //    json += face.exportToJSON() 
+        //    json += face.exportToJSON()
         //);
         //json += "}}";
-        let json = JSON.stringify(this, ['name','dimension','color','faces'])
-        return json; 
+        let json = JSON.stringify(this, [
+            "name",
+            "dimension",
+            "color",
+            "faces"
+        ]);
+        return json;
     }
 
-    static importFromJSON(json){
-        let obj = JSON.parse()
-        let tmp = new Face()
-
+    /**
+     * create a face from a json
+     * @param {JSON}
+     */
+    static importFromJSON(json) {
+        let obj = JSON.parse();
+        let tmp = new Face();
     }
 
     /**
@@ -83,7 +91,7 @@ class Solid extends NDObject {
     }
 
     /**
-     *
+     * @returns txt
      */
     logDetail() {
         return `Solid name : ${this.name} 
@@ -102,6 +110,7 @@ class Solid extends NDObject {
     /**
      *
      * @param {*} corner
+     * @return boolean true if corner added
      */
     suffixCorner(corner) {
         if (!this.corners.find(corn => isCornerEqual(corn, corner))) {
@@ -113,14 +122,14 @@ class Solid extends NDObject {
     }
 
     /**
-     *
+     * erase corners
      */
     eraseCorners() {
         this.corners = [];
     }
 
     /**
-     *
+     * clear adajcent faces
      */
     eraseOldAdjacencies() {
         this.eraseCorners();
@@ -152,7 +161,8 @@ class Solid extends NDObject {
         return [...this.faces].every(face => face.isPointInsideFace(point));
     }
 
-    //TODO faire une vérification qu'un point est dans un groupe de solids
+    // TODO faire une vérification qu'un point est dans un groupe de solids
+
     /**
      *
      * @param {*} point
@@ -166,7 +176,7 @@ class Solid extends NDObject {
      */
     unvalidSolid() {
         this.adjacenciesValid = false;
-       // this.eraseOldAdjacencies();
+        // this.eraseOldAdjacencies();
         this.eraseSilhouettes();
     }
 
@@ -245,12 +255,12 @@ class Solid extends NDObject {
      * @param {*} facesref
      */
     computeIntersection(facesref) {
-        const intersection = Face.facesRefIntersection(this.faces,facesref);
+        const intersection = Face.facesRefIntersection(this.faces, facesref);
         if (intersection) {
             this.processCorner(facesref, intersection);
         }
     }
-   /*  computeIntersection(faces) {
+    /*  computeIntersection(faces) {
         const intersection = Face.facesIntersection(faces);
         if (intersection) {
             this.processCorner(faces, intersection);
@@ -275,7 +285,7 @@ class Solid extends NDObject {
     findAdjacencies() {
         this.eraseOldAdjacencies();
         this.computeAdjacencies();
-        this.filterRealFaces(); 
+        this.filterRealFaces();
         this.adjacenciesValid = true;
     }
 
@@ -293,16 +303,17 @@ class Solid extends NDObject {
      *
      */
     ensureSilhouettes() {
-        if(this.silhouettes.length==0) {
-        for (let i = 0; i < this.dimension; i++) {
-            this.silhouettes[i] = this.createSilhouette(i);
+        if (this.silhouettes.length == 0) {
+            for (let i = 0; i < this.dimension; i++) {
+                this.silhouettes[i] = this.createSilhouette(i);
+            }
         }
-    }
     }
 
     /**
      *
      * @param {*} axe
+     * @return {array} silhouettes
      */
     createSilhouette(axe) {
         const sFaces = [...this.faces];
@@ -319,6 +330,7 @@ class Solid extends NDObject {
     /**
      *
      * @param {*} axe
+     * @returns silhouettes
      */
     getSilhouette(axe) {
         return this.silhouettes[axe];
@@ -337,6 +349,7 @@ class Solid extends NDObject {
      * @param {*} axe
      * @todo for the moment, project the silhouette, need to project differents faces
      * @todo vérifier que clonedeep est utile
+     * @return {array} solids
      */
     project(axe) {
         //TODO ajouter lights et ambient
@@ -352,18 +365,64 @@ class Solid extends NDObject {
         const dim = projSol.dimension - 1;
         let solid = new Solid(dim, halfspaces);
         //TODO color of projection is function of lights
-        solid.color = projSol.color ;
-        solid.name = projSol.name+"|P"+axe+"|" ;
+        solid.color = projSol.color;
+        solid.name = projSol.name + "|P" + axe + "|";
         return [solid];
     }
 
     /**
      *
+     * @param {*} hyperplane
+     * @todo reprendre l'axe de projection
+     */
+    sliceProject(hyperplane) {
+        const projSol = cloneDeep(this);
+        // projSol.selected = this.selected;
+        // projSol.propagateSelection();
+        // projSol.name = "projection " + projSol.name;
+        const projFace = new Face(hyperplane);
+        projFace.slice = true;
+        // console.log("proj face :"+projFace.slice );
+        let tmp = [...projSol.faces].map(face => face.slice);
+        // console.log("1-"+JSON.stringify(tmp)) ;
+        projSol.addFace(projFace);
+        // pour faire une coupe, crée une tranche et la traite comme un solide
+        // on pourrait directement utiliser la face de découpe
+
+        const eq2 = constantAdd([...hyperplane].map(coord => -coord), -1);
+        const projFace2 = new Face(eq2);
+        projSol.addFace(projFace2);
+        return projSol.project(2);
+        // tmp = [...projSol.faces].map(face => face.slice);
+        // // console.log("2-"+JSON.stringify(tmp)) ;
+        // projSol.ensureAdjacencies();
+        // tmp = [...projSol.faces].map(face => face.slice);
+        // // console.log("3-"+JSON.stringify(tmp)) ;
+        // // projSol.ensureSilhouettes();
+        // //if (projSol.faces.length == 0 ) return [] ;
+        // const slface = [...projSol.faces].find(face => face.slice);
+        // // console.log(JSON.stringify(slface)) ;
+        // if (!slface) return [] ;
+        // // const sface = slface[0];
+        // // console.log(JSON.stringify(slface)) ;
+
+        // const halfspaces = [...slface.sliceShape(2)].map(face => Solid.silProject(face, 2));
+        // const dim = projSol.dimension - 1;
+        // let solid = new Solid(dim, halfspaces);
+        // //TODO color of projection is function of lights
+        // solid.color = projSol.color;
+        // solid.name = projSol.name + "|P" + hyperplane + "|";
+        // return [solid];
+    }
+
+    /**
+     *
      * @param {*} vector
+     * @returns this
      */
     translate(vector, force = false) {
-       // if (!this.selected && !force ) return this;
-        vector = [...vector].map(x=>parseFloat(x));
+        // if (!this.selected && !force ) return this;
+        vector = [...vector].map(x => parseFloat(x));
         this.faces = [...this.faces].map(face => face.translate(vector));
         this.unvalidSolid();
         return this;
@@ -372,20 +431,19 @@ class Solid extends NDObject {
     /**
      *
      * @param {*} matrix
+     * @returns this
      */
     transform(matrix, center, force = false) {
-       // if (!this.selected && !force ) return this;
+        // if (!this.selected && !force ) return this;
 
-        let centerl = [...center].map(x=>-parseFloat(x));
+        let centerl = [...center].map(x => -parseFloat(x));
         this.faces = [...this.faces].map(face => face.translate(centerl));
-
-
 
         this.faces = [...this.faces].map(face => face.transform(matrix));
-        
-        centerl = [...center].map(x=>parseFloat(x));
+
+        centerl = [...center].map(x => parseFloat(x));
         this.faces = [...this.faces].map(face => face.translate(centerl));
-      
+
         this.unvalidSolid();
         return this;
     }
@@ -394,6 +452,7 @@ class Solid extends NDObject {
      *
      * @param {*} solid
      * @param {*} axe
+     * @returns corner
      */
     findCornerInSilhouette(solid, axe) {
         const sil = solid.silhouettes[axe];
@@ -413,6 +472,7 @@ class Solid extends NDObject {
      * @param {*} point
      * @param {*} axe
      * @todo values behind and infront
+     * @returns -1 or 1 or false
      */
     checkOrientation(point, axe) {
         //const faces = [...cloneDeep(this.faces)];
@@ -433,6 +493,7 @@ class Solid extends NDObject {
      * @param {*} solid
      * @param {*} axe
      * @todo return false ou 0 ?
+     * @returns boolean
      */
     isInFront(solid, axe) {
         const corner = this.findCornerInSilhouette(solid, axe);
@@ -463,6 +524,7 @@ class Solid extends NDObject {
      * @param {*} solid
      * @returns bool
      * @todo il faudrait aussi vérifier que c2.every()
+     * @todo il faut vérifier que l'écart est faible !
      */
     isEqual(solid) {
         // TODO test
@@ -532,24 +594,15 @@ class Solid extends NDObject {
      * @todo write
      */
     middleOf() {
-        //const maxCorner = [] ;
-        //const minCorner = [] ;
-        const corners = [] ;
-        for(let i =0 ; i< this.dimension; i++) {
+        const corners = [];
+        for (let i = 0; i < this.dimension; i++) {
             const vals = [...this.corners].map(corner => corner[i]);
-            const maxCorner = Math.max(...vals) ;
-            const minCorner = Math.min(...vals) ;
-           // [...this.corners].forEach( corner => {
-           //     maxCorner[i] = Math.max(maxCorner[i],corner[i]);
-           //     minCorner[i] = Math.max(minCorner[i],corner[i]);
-           // });
-           corners[i] = (maxCorner + minCorner) / 2 ;
+            const maxCorner = Math.max(...vals);
+            const minCorner = Math.min(...vals);
+            corners[i] = (maxCorner + minCorner) / 2;
         }
-        return corners ;
-
-
+        return corners;
     }
-
 
     /**
      *

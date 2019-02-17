@@ -1,3 +1,10 @@
+/**
+ * @file Describes ADSODA space
+ * @author Jeff Bigot <jeff@raktres.net> after Greg Ferrar
+ * @class Space
+ * @requires lodash/cloneDeep
+ */
+
 import { NDObject } from "./ndobject.js";
 import { Solid } from "./solid.js";
 import { Face } from "./face.js";
@@ -5,12 +12,9 @@ import { Light } from "./light.js";
 import cloneDeep from "lodash/cloneDeep";
 import * as P from "./parameters";
 
-/**
- *
- */
 class Space {
     /**
-     *
+     * @constructor Space
      * @param {*} dim
      */
     constructor(dim, space) {
@@ -21,25 +25,22 @@ class Space {
         this.ambientColor = false;
         this.lights = [];
         this.projection = [];
-        this.removeHidden = false ;
+        this.removeHidden = false;
     }
 
     /**
-     *
+     * @returns JSON
      */
-
     exportToJSON() {
-        let json = `{ name : ${this.name} , dimension : ${this.dimension} , ambientColor : ${this.ambientColor} , solids : { `;
-        this.solids.forEach( face =>
-            json += solids.exportToJSON() 
-        );
+        let json = `{ name : ${this.name} , dimension : ${
+            this.dimension
+        } , ambientColor : ${this.ambientColor} , solids : { `;
+        this.solids.forEach(face => (json += solids.exportToJSON()));
         json += "}, lights :{ ";
-        this.lights.forEach( light =>
-            json += light.exportToJSON() 
-        );
+        this.lights.forEach(light => (json += light.exportToJSON()));
         json += "}} ";
 
-        return json; 
+        return json;
     }
 
     logDetail() {}
@@ -89,28 +90,25 @@ class Space {
     /**
      *
      * @param {*} matrix
-     * @param {*} force 
+     * @param {*} force
      */
-    transform(matrix,force=false) {
-        // const solids = 
+    transform(matrix, force = false) {
+        // const solids =
         [...this.solids].forEach(solid => {
             //console.log(solid.logDetail());
             const center = solid.middleOf();
-            solid.transform(matrix,center,force);
-            
-        }
-        
-            );
-    // this.solids = solids;
+            solid.transform(matrix, center, force);
+        });
+        // this.solids = solids;
     }
 
     /**
-     * 
-     * @param {*} vector 
-     * @param {*} force 
+     *
+     * @param {*} vector
+     * @param {*} force
      */
-    translate(vector,force=false) {
-        [...this.solids].forEach(solid => solid.translate(vector,force));
+    translate(vector, force = false) {
+        [...this.solids].forEach(solid => solid.translate(vector, force));
     }
 
     /**
@@ -144,6 +142,7 @@ class Space {
     /**
      * create the name of the projected space
      * @param {*} axe
+     * @return text
      */
     projectName(axe) {
         return `${this.name} projection axis ${axe}`;
@@ -152,6 +151,7 @@ class Space {
     /**
      *
      * @param {*} axe
+     * @returns array of lights
      */
     projectLights(axe) {
         return [...this.lights];
@@ -163,9 +163,9 @@ class Space {
      * @returns array of solids
      */
     projectSolids(axe) {
-        const filteredSolids = this.removeHidden ? 
-            this.removeHiddenSolids(axe) : 
-            [...this.solids]; 
+        const filteredSolids = this.removeHidden
+            ? this.removeHiddenSolids(axe)
+            : [...this.solids];
         const solids = filteredSolids
             .map(solid => solid.project(axe))
             .reduce((solflat, item) => solflat.concat(item), [])
@@ -174,8 +174,22 @@ class Space {
     }
 
     /**
+     *
+     * @param {*} hyperplane
+     */
+    sliceProjectSolids(hyperplane) {
+        const filteredSolids = [...this.solids];
+        const solids = filteredSolids
+            .map(solid => solid.sliceProject(hyperplane))
+            .reduce((solflat, item) => solflat.concat(item), [])
+            .filter(solid => solid.isNonEmptySolid());
+        return solids;
+    }
+
+    /**
      * Project space following axe
      * @param {*} axe for the moment, just the index of axe
+     * @returns space
      */
     project(axe) {
         //if (REMOVE_HIDDEN)
@@ -185,10 +199,26 @@ class Space {
         space.lights = this.projectLights(axe);
         //TODO il faut que project solids utilise filteredSolids
         const solidarray = this.projectSolids(axe);
-        solidarray.forEach(solid => space.solids.add(solid)); 
+        solidarray.forEach(solid => space.solids.add(solid));
         return space;
     }
 
+    /**
+     * Project space following axe
+     * @param {*} hyperplane for the moment, just the index of axe
+     * @returns space
+     */
+    sliceProject(hyperplane) {
+        //if (REMOVE_HIDDEN)
+        let space = new Space(this.dimension - 1);
+        // space.ambientColor = cloneDeep(this.ambientColor);
+        space.name = this.projectName("slice".hyperplane);
+        // space.lights = this.projectLights(axe);
+        //TODO il faut que project solids utilise filteredSolids
+        const solidarray = this.sliceProjectSolids(hyperplane);
+        solidarray.forEach(solid => space.solids.add(solid));
+        return space;
+    }
     /**
      * @todo write
      */
@@ -200,8 +230,9 @@ class Space {
     deleteSelectedSolids() {}
 
     /**
-     * 
-     * @param {*} halfspaces 
+     *
+     * @param {*} halfspaces
+     * @returns solid
      */
     createSolid(halfspaces) {
         const solid = new Solid(this.dimension);

@@ -38,17 +38,16 @@ describe("Face test", () => {
         expect([...face.touchingCorners]).toEqual([1, 2]);
     });
 
-    
     test("transform", () => {
         let face = new Face([1, 0, 3]);
-        face.transform([[0,1],[1,0]]);
+        face.transform([[0, 1], [1, 0]]);
         expect(face.equ[0]).toEqual(0);
         expect(face.equ[1]).toEqual(1);
         expect(face.equ[2]).toEqual(3);
     });
     test("translate", () => {
         let face = new Face([1, 2, 3]);
-        face.translate([1,1]);
+        face.translate([1, 1]);
         expect(face.equ[0]).toEqual(1);
         expect(face.equ[1]).toEqual(2);
         expect(face.equ[2]).toEqual(0);

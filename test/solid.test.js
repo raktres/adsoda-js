@@ -121,14 +121,13 @@ describe("Solid test", () => {
     test("is corner equel", () => {
         const p1 = [0, 1, 2];
         const p2 = [3, 4, 5];
-        const p3 = [0 + 2*P.VERY_SMALL_NUM, 1, 2 - P.VERY_SMALL_NUM];
-        const p4 = [0 + P.VERY_SMALL_NUM/2, 1, 2 - P.VERY_SMALL_NUM/10];
+        const p3 = [0 + 2 * P.VERY_SMALL_NUM, 1, 2 - P.VERY_SMALL_NUM];
+        const p4 = [0 + P.VERY_SMALL_NUM / 2, 1, 2 - P.VERY_SMALL_NUM / 10];
         expect(isCornerEqual(p1, p2)).toBeFalsy();
         expect(isCornerEqual(p1, p3)).toBeFalsy();
 
         expect(isCornerEqual(p1, p4)).toBeTruthy();
     });
-
 
     test("test slice", () => {
         const face = new Face([1, -1, -8]);
@@ -165,7 +164,7 @@ describe("Solid test", () => {
             [0, -1, 6]
         ]);
         const middle = ss1.middleOf();
-        expect(middle).toEqual([4.5,4]);
+        expect(middle).toEqual([4.5, 4]);
     });
     test("solid subtract", () => {
         const pr0 = sfr.project(0);
@@ -201,48 +200,39 @@ describe("Solid test", () => {
     });
     test("solid translate", () => {
         sfg = new Solid(2, [[1, -2, 0], [-1, 0, 14], [-1, 3, 8], [4, 1, -45]]);
-        sfg.selected = true ;
-        expect(sfg.isPointInsideSolid([12,2])).toBeTruthy();
-        expect(sfg.isPointInsideSolid([11,6])).toBeFalsy();
-        sfg.translate([0,2]);
+        sfg.selected = true;
+        expect(sfg.isPointInsideSolid([12, 2])).toBeTruthy();
+        expect(sfg.isPointInsideSolid([11, 6])).toBeFalsy();
+        sfg.translate([0, 2]);
         sfg.ensureAdjacencies();
-        expect(sfg.isPointInsideSolid([12,2])).toBeFalsy();
-        expect(sfg.isPointInsideSolid([11,6])).toBeTruthy();
-
-       
+        expect(sfg.isPointInsideSolid([12, 2])).toBeFalsy();
+        expect(sfg.isPointInsideSolid([11, 6])).toBeTruthy();
     });
     function rotXY(d) {
-        const a = d * Math.PI / 180 ;
-        const c = Math.cos( a ) ;
-        const s = Math.sin( a ) ;
-        const rot = [
-                [ 1,0,0,0],
-                [0,1,0,0],
-                [0,0,c,-s],
-                [0,0,s,c]
-                ];
-    
-        return rot ;
+        const a = (d * Math.PI) / 180;
+        const c = Math.cos(a);
+        const s = Math.sin(a);
+        const rot = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, c, -s], [0, 0, s, c]];
+
+        return rot;
     }
     test("solid 4D rotation", () => {
-      // const space4 = new Space(4, "toto");
+        // const space4 = new Space(4, "toto");
         const C = cube4D(2, 5);
         // console.log("avant rot"+C.logSummary());
-        const t = C.isPointInsideSolid([4,4,4.9,4]) ;
+        const t = C.isPointInsideSolid([4, 4, 4.9, 4]);
         expect(t).toBeTruthy();
         // C.selected = true ;
         const r1 = rotXY(5);
-        C.transform(r1, [0,0,0,0], true);
+        C.transform(r1, [0, 0, 0, 0], true);
         C.ensureAdjacencies();
         // console.log("après rot"+C.logSummary());
         //space4.suffixSolid(C);
         //const space3_0 = space4.project(0);
-        expect(C.isPointInsideSolid([4,4,4.9,4])).toBeFalsy();
-        
+        expect(C.isPointInsideSolid([4, 4, 4.9, 4])).toBeFalsy();
     });
     test("test JSON", () => {
         const txt = sfb.exportToJSON();
         expect(true).toBeTruthy();
     });
 });
-
