@@ -3,12 +3,11 @@
  * @author Jeff Bigot <jeff@raktres.net> after Greg Ferrar
  * @class Solid
  * @extends NDObject
- * @requires lodash/cloneDeep
  */
 
 import { NDObject } from "./ndobject.js";
 import { Face } from "./face.js";
-import cloneDeep from "lodash/cloneDeep";
+// import cloneDeep from "lodash/cloneDeep";
 import {
     projectVector,
     isCornerEqual,
@@ -47,6 +46,14 @@ class Solid extends NDObject {
             halffiltered.forEach(HS => _t.suffixFace(new Face(HS)));
             this.ensureAdjacencies();
         }
+    }
+
+    clone(){
+        // const half = ;
+        const newSolid = new Solid(this.dimension,[...this.faces].map(f=> f.equ.slice()));
+        newSolid.color = this.color;
+        newSolid.name = this.name;
+        return newSolid ;
     }
 
     /**
@@ -206,7 +213,7 @@ class Solid extends NDObject {
         //Attention mutation de this et retour d'un nouveau solide
         //vérifier que c'est bon
         const equ = [...face.equ];
-        const solid1 = cloneDeep(this);
+        const solid1 = this.clone() ; // cloneDeep(this);
         solid1.name = this.name + "/outer/";
 
         const flip_equ = equ.map(coord => -coord);
@@ -271,11 +278,11 @@ class Solid extends NDObject {
      *
      */
     computeAdjacencies() {
-        const groupsFaces = moizeAmongIndex(
+        const groupsFaces = JSON.parse(moizeAmongIndex(
             this.faces.length,
             this.dimension,
             P.MAX_FACE_PER_CORNER
-        );
+        ));
         groupsFaces.forEach(group => this.computeIntersection(group));
     }
 
@@ -353,7 +360,7 @@ class Solid extends NDObject {
      */
     project(axe) {
         //TODO ajouter lights et ambient
-        const projSol = cloneDeep(this);
+        const projSol = this.clone() ; // cloneDeep(this);
         projSol.selected = this.selected;
         projSol.propagateSelection();
         projSol.name = "projection " + projSol.name;
@@ -376,23 +383,35 @@ class Solid extends NDObject {
      * @todo reprendre l'axe de projection
      */
     sliceProject(hyperplane) {
-        const projSol = cloneDeep(this);
-        // projSol.selected = this.selected;
-        // projSol.propagateSelection();
-        // projSol.name = "projection " + projSol.name;
+        const projSol = this.clone() ;// Deep(this);
         const projFace = new Face(hyperplane);
         projFace.slice = true;
         // console.log("proj face :"+projFace.slice );
-        let tmp = [...projSol.faces].map(face => face.slice);
+        // let tmp = [...projSol.faces].map(face => face.slice);
         // console.log("1-"+JSON.stringify(tmp)) ;
         projSol.addFace(projFace);
         // pour faire une coupe, crée une tranche et la traite comme un solide
         // on pourrait directement utiliser la face de découpe
 
         const eq2 = constantAdd([...hyperplane].map(coord => -coord), -1);
-        const projFace2 = new Face(eq2);
-        projSol.addFace(projFace2);
-        return projSol.project(2);
+        //const projFace2 = new Face(eq2);
+        projSol.addFace(new Face(eq2));
+        // return projSol.project(2);
+        projSol.ensureAdjacencies();
+        
+        const sil = this.createSilhouette(2);
+        
+        const halfspaces = [...sil].map(face =>
+            Solid.silProject(face, 2)
+        );
+        const dim = projSol.dimension - 1;
+        const solid = new Solid(dim, halfspaces);
+        //TODO color of projection is function of lights
+        solid.color = projSol.color;
+        solid.name = projSol.name + "|Pcut|";
+        return [solid];
+
+
         // tmp = [...projSol.faces].map(face => face.slice);
         // // console.log("2-"+JSON.stringify(tmp)) ;
         // projSol.ensureAdjacencies();
@@ -541,7 +560,7 @@ class Solid extends NDObject {
      * @todo évaluer l'impact du clone de faces
      */
     subtract(faces) {
-        const newsolid = cloneDeep(this);
+        const newsolid = this.clone() ; //cloneDeep(this);
         newsolid.ensureAdjacencies();
         //TODO supprimer
         const clonefaces = faces; // cloneDeep(faces);
@@ -582,7 +601,7 @@ class Solid extends NDObject {
      * @param {*} exclude
      */
     solidsSilhouetteSubtract(solids, axe) {
-        const soli = solids.map(sol => cloneDeep(sol));
+        const soli = solids.map(sol => sol.clone()); // cloneDeep
         let res = [];
         for (let i = 0; i < solids.length; i++) {
             res = res.concat(this.clipWith(soli[i], axe));

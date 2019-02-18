@@ -2,7 +2,6 @@
  * @file Describes ADSODA face
  * @author Jeff Bigot <jeff@raktres.net> after Greg Ferrar
  * @class Face
- * @requires lodash/cloneDeep
  */
 
 import {
@@ -15,7 +14,7 @@ import {
     getConstant,
     moizeAmongIndex
 } from "./halfspace.js";
-import cloneDeep from "lodash/cloneDeep";
+// import cloneDeep from "lodash/cloneDeep";
 import * as math from "mathjs";
 import { NDObject } from "./ndobject.js";
 import * as P from "./parameters";
@@ -335,7 +334,7 @@ class Face extends NDObject {
      * @returns array array of faces
      */
     intersectionsIntoFaces() {
-        const tface = cloneDeep(this);
+        const face = this ; // cloneDeep(this);
         const faces = [...face.adjacentFaces].map[
             _face => _face.intersectionIntoFace() // pas bon, manque tface
         ].filter(fac => fac);
@@ -493,7 +492,7 @@ class Face extends NDObject {
     static updateAdjacentFacesRefs(faces, refs, corner) {
         refs.forEach(ref => faces[ref].suffixTouchingCorners(corner));
 
-        const grouprefs = moizeAmongIndex(refs.length, 2, 2);
+        const grouprefs = JSON.parse(moizeAmongIndex(refs.length, 2, 2));
 
         for (const groupref of grouprefs) {
             faces[refs[groupref[0]]].suffixAdjacentFaces(

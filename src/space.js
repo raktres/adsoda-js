@@ -2,14 +2,13 @@
  * @file Describes ADSODA space
  * @author Jeff Bigot <jeff@raktres.net> after Greg Ferrar
  * @class Space
- * @requires lodash/cloneDeep
  */
 
 import { NDObject } from "./ndobject.js";
 import { Solid } from "./solid.js";
 import { Face } from "./face.js";
 import { Light } from "./light.js";
-import cloneDeep from "lodash/cloneDeep";
+// import cloneDeep from "lodash/cloneDeep";
 import * as P from "./parameters";
 
 class Space {
@@ -118,12 +117,12 @@ class Space {
      */
     removeHiddenSolids(axe) {
         const _tsolids = [...this.solids];
-        let listOfSolids = _tsolids.map(solid => [cloneDeep(solid)]);
+        let listOfSolids = _tsolids.map(solid => [solid.clone()]); // clonedeep
         for (let ind = 0; ind < _tsolids.length; ind++) {
             const tempSol = _tsolids[ind];
             for (let i = 0; i < listOfSolids.length; i++) {
                 if (i != ind) {
-                    const tempLOS = cloneDeep(listOfSolids[i]);
+                    const tempLOS = listOfSolids[i].clone(); //clonedeep
                     const tempList = tempSol.solidsSilhouetteSubtract(
                         tempLOS,
                         axe
@@ -178,8 +177,8 @@ class Space {
      * @param {*} hyperplane
      */
     sliceProjectSolids(hyperplane) {
-        const filteredSolids = [...this.solids];
-        const solids = filteredSolids
+        // const filteredSolids = [...this.solids];
+        const solids = [...this.solids]
             .map(solid => solid.sliceProject(hyperplane))
             .reduce((solflat, item) => solflat.concat(item), [])
             .filter(solid => solid.isNonEmptySolid());
@@ -194,9 +193,9 @@ class Space {
     project(axe) {
         //if (REMOVE_HIDDEN)
         let space = new Space(this.dimension - 1);
-        space.ambientColor = cloneDeep(this.ambientColor);
+        // space.ambientColor = cloneDeep(this.ambientColor);
         space.name = this.projectName(axe);
-        space.lights = this.projectLights(axe);
+        // space.lights = this.projectLights(axe);
         //TODO il faut que project solids utilise filteredSolids
         const solidarray = this.projectSolids(axe);
         solidarray.forEach(solid => space.solids.add(solid));

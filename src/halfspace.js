@@ -167,13 +167,17 @@ export function amongIndex(l, a, b) {
         ref[i] = i;
     }
     //const range = (start,end) => new Array(end - start +1).fill(undefined).map((value,index)=>index+start);
-    for (const i in ref) {
-        for (const j in extract) {
+    // for (const i in ref) {
+    for (let i=0; i<l; i++ ){
+
+        //for (const j in extract) {
+        const le = extract.length ;
+        for(let j = 0; j<le; j++){ 
             extract.push(extract[j].concat(ref[i]));
         }
     }
-
-    return extract.filter(sub => sub.length >= a && sub.length <= b);
+    const res = extract.filter(sub => sub.length >= a && sub.length <= b);
+    return JSON.stringify(res);
 }
 
 /**

@@ -4,7 +4,7 @@
  * @module space4d
  */
 
-import { Space } from "./space.js";
+// import { Space } from "./space.js";
 import { Solid } from "./solid.js";
 
 /**
