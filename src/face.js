@@ -15,9 +15,21 @@ import {
     moizeAmongIndex
 } from "./halfspace.js";
 // import cloneDeep from "lodash/cloneDeep";
-import * as math from "mathjs";
+// import {dot, multiply, substract,cross, atan2, unaryMinus, } as math from "mathjs";
 import { NDObject } from "./ndobject.js";
 import * as P from "./parameters";
+const core = require('mathjs/core') ;
+const math = core.create() ;
+
+math.import(require('mathjs/lib/type/matrix'));
+math.import(require('mathjs/lib/function/arithmetic/multiply')) ;
+math.import(require('mathjs/lib/function/arithmetic/subtract')) ;
+math.import(require('mathjs/lib/function/arithmetic/norm')) ;
+math.import(require('mathjs/lib/function/arithmetic/unaryMinus')) ;
+math.import(require('mathjs/lib/function/matrix/transpose')) ;
+math.import(require('mathjs/lib/function/matrix/dot')) ;
+math.import(require('mathjs/lib/function/matrix/cross')) ;
+
 
 let replacer = function(key, value) {
     if (Array.isArray(value)) {
@@ -404,7 +416,40 @@ class Face extends NDObject {
                 silFaces = [...silFaces, nface];
             }
         }
-        return [...silFaces];
+        return silFaces;
+    }
+
+
+
+    /**
+     *
+     * @param {*} axe
+     * @returns array array of faces
+     */
+    forceSilhouette(axe) {
+        // if (this.isBackFace(axe)) return false;
+
+        // TODO !!!!! à quois sert newface ???
+        const newFace = new Face(this.equ);
+        //cloneFace.touchingCorners
+        newFace.touchingCorners = this.touchingCorners;
+
+        //Just keep backface to get visible edge ;
+        const adjaFaces = [...this.adjacentFaces];
+
+        // if all adjacent faces are front need to keep.
+        // TODO verify if useful
+        // if (adjaFaces.length == 0) return false;
+
+        let silFaces = [];
+
+        for (const aFace of adjaFaces) {
+            const nface = newFace.intersectionIntoSilhouetteFace(aFace, axe);
+            if (nface) {
+                silFaces = [...silFaces, nface];
+            }
+        }
+        return silFaces;
     }
 
     /**
@@ -519,7 +564,7 @@ function order3D(point1, halfspace, pointref, vectorref) {
     const crossP = math.cross(vectorref, v1);
     const norm = math.norm(crossP);
     const dotP = math.dot(vectorref, v1);
-    const theta = math.atan2(norm, dotP);
+    const theta = Math.atan2(norm, dotP);
     const sign = math.dot(crossP, halfspace);
     if (sign < 0) {
         return -theta;

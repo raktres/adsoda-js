@@ -8,7 +8,7 @@
 /**
  * @constant
  */
-export const MAX_FACE_PER_CORNER = 8;
+export const MAX_FACE_PER_CORNER = 15;
 
 /**
  * @constant

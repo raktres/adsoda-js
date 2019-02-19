@@ -6,9 +6,9 @@
  * @todo use it
  */
 
-import { translate, projectVector } from "./halfspace.js";
+// import { translate, projectVector } from "./halfspace.js";
 import { NDObject } from "./ndobject.js";
-import * as P from "./parameters.js";
+// import * as P from "./parameters.js";
 
 class Light extends NDObject {
     /**

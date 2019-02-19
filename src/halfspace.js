@@ -1,4 +1,3 @@
-import * as math from "mathjs";
 /**
  * @file Describes ADSODA halfspace
  * @author Jeff Bigot <jeff@raktres.net> after Greg Ferrar
@@ -7,6 +6,12 @@ import * as math from "mathjs";
 
 import moize from "moize";
 import * as P from "./parameters";
+const core = require('mathjs/core') ;
+const math = core.create() ;
+math.import(require('mathjs/lib/type/matrix'));
+math.import(require('mathjs/lib/function/arithmetic/multiply')) ;
+math.import(require('mathjs/lib/function/matrix/transpose')) ;
+math.import(require('mathjs/lib/function/matrix/dot')) ;
 
 //|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //| Halfspace.cp

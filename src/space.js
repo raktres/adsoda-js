@@ -4,12 +4,12 @@
  * @class Space
  */
 
-import { NDObject } from "./ndobject.js";
+// import { NDObject } from "./ndobject.js";
 import { Solid } from "./solid.js";
 import { Face } from "./face.js";
-import { Light } from "./light.js";
+// import { Light } from "./light.js";
 // import cloneDeep from "lodash/cloneDeep";
-import * as P from "./parameters";
+// import * as P from "./parameters";
 
 class Space {
     /**

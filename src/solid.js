@@ -331,8 +331,9 @@ class Solid extends NDObject {
                 sil = [...sil, ...tmp];
             }
         }
-        return [...sil];
+        return sil;
     }
+
 
     /**
      *
@@ -361,8 +362,8 @@ class Solid extends NDObject {
     project(axe) {
         //TODO ajouter lights et ambient
         const projSol = this.clone() ; // cloneDeep(this);
-        projSol.selected = this.selected;
-        projSol.propagateSelection();
+        // projSol.selected = this.selected;
+       // projSol.propagateSelection();
         projSol.name = "projection " + projSol.name;
         projSol.ensureAdjacencies();
         projSol.ensureSilhouettes();
@@ -385,6 +386,25 @@ class Solid extends NDObject {
     sliceProject(hyperplane) {
         const projSol = this.clone() ;// Deep(this);
         const projFace = new Face(hyperplane);
+        projSol.addFace(projFace);
+        projSol.ensureAdjacencies();
+
+        const sil = projFace.forceSilhouette(2);
+        const halfspaces = [...sil].map(face =>
+            Solid.silProject(face, 2)
+        );
+        const dim = projSol.dimension - 1;
+        const solid = new Solid(dim, halfspaces);
+        //TODO color of projection is function of lights
+        solid.color = projSol.color;
+        solid.name = projSol.name + "|Pcut|";
+        return [solid];
+ 
+
+
+
+/*         const projSol = this.clone() ;// Deep(this);
+        const projFace = new Face(hyperplane);
         projFace.slice = true;
         // console.log("proj face :"+projFace.slice );
         // let tmp = [...projSol.faces].map(face => face.slice);
@@ -399,7 +419,7 @@ class Solid extends NDObject {
         // return projSol.project(2);
         projSol.ensureAdjacencies();
         
-        const sil = this.createSilhouette(2);
+        const sil = projSol.createSilhouette(2);
         
         const halfspaces = [...sil].map(face =>
             Solid.silProject(face, 2)
@@ -409,29 +429,8 @@ class Solid extends NDObject {
         //TODO color of projection is function of lights
         solid.color = projSol.color;
         solid.name = projSol.name + "|Pcut|";
-        return [solid];
+return [solid]; */
 
-
-        // tmp = [...projSol.faces].map(face => face.slice);
-        // // console.log("2-"+JSON.stringify(tmp)) ;
-        // projSol.ensureAdjacencies();
-        // tmp = [...projSol.faces].map(face => face.slice);
-        // // console.log("3-"+JSON.stringify(tmp)) ;
-        // // projSol.ensureSilhouettes();
-        // //if (projSol.faces.length == 0 ) return [] ;
-        // const slface = [...projSol.faces].find(face => face.slice);
-        // // console.log(JSON.stringify(slface)) ;
-        // if (!slface) return [] ;
-        // // const sface = slface[0];
-        // // console.log(JSON.stringify(slface)) ;
-
-        // const halfspaces = [...slface.sliceShape(2)].map(face => Solid.silProject(face, 2));
-        // const dim = projSol.dimension - 1;
-        // let solid = new Solid(dim, halfspaces);
-        // //TODO color of projection is function of lights
-        // solid.color = projSol.color;
-        // solid.name = projSol.name + "|P" + hyperplane + "|";
-        // return [solid];
     }
 
     /**
@@ -667,7 +666,7 @@ class Solid extends NDObject {
         //newface.equ=projectVector(newface.equ,axe);
         //newface.dim = newface.dim - 1 ;
         //const nfaces = [...face.intersectionsIntoFaces()];
-        return [...projectVector(face.equ, axe)];
+        return projectVector(face.equ, axe);
     }
 }
 

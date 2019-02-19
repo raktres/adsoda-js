@@ -4,7 +4,7 @@
  * @class NDObject
  */
 
-import { translate, projectVector } from "./halfspace.js";
+
 
 class NDObject {
     /**

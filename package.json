@@ -1,15 +1,16 @@
 {
   "name": "adsoda",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "ADSODA - Arbitrary-Dimensional Solid Object Display Algorithm - after a Greg Ferrar algorithm",
   "main": "dist/adsoda",
   "typings": "dist/adsoda",
   "scripts": {
     "test": "jest",
     "clean": "prettier --tab-width=4 --write ./src/*.js ./test/*.js",
-    "build": "webpack",
+    "build": "webpack ",
     "doc": "jsdoc  ./package.json  ./src/*.js",
-    "lint": "eslint ./src"
+    "lint": "eslint ./src",
+    "stats": "webpack --json > stats.json"
   },
   "repository": {
     "type": "git",
@@ -20,7 +21,6 @@
     "4DStroll",
     "4D",
     "TAK4D"
-
   ],
   "author": "Jeff Bigot",
   "license": "ISC",
@@ -48,7 +48,10 @@
     "jsdoc": "^3.5.5",
     "nyc": "^13.1.0",
     "prettier": "^1.15.3",
-    "webpack-cli": "^3.1.2"
+    "webpack-bundle-analyser": "^1.4.0",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev": "^1.1.1",
+    "webpack-dev-server": "^3.1.14"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -72,7 +75,5 @@
       "text"
     ]
   },
-  "dependencies": {
-    
-  }
+  "dependencies": {}
 }
