@@ -55,21 +55,21 @@ describe("Tests of halfspace", () => {
     }); */
 
     test("amongIndex", () => {
-        const array2 = amongIndex(3, 2, 2);
+        const array2 = JSON.parse(amongIndex(3, 2, 2));
         expect(array2.length).toEqual(3);
-        const array13 = amongIndex(3, 1, 3);
+        const array13 = JSON.parse(amongIndex(3, 1, 3));
         expect(array13.length).toEqual(7);
     });
     test("amongIndex Moize", () => {
-        let array2 = moizeAmongIndex(3, 2, 2);
+        let array2 = JSON.parse(moizeAmongIndex(3, 2, 2));
         expect(array2.length).toEqual(3);
-        const array13 = moizeAmongIndex(3, 1, 3);
+        const array13 = JSON.parse(moizeAmongIndex(3, 1, 3));
         expect(array13.length).toEqual(7);
-        array2 = moizeAmongIndex(3, 2, 2);
+        array2 = JSON.parse(moizeAmongIndex(3, 2, 2));
         expect(array2.length).toEqual(3);
-        array2 = moizeAmongIndex(3, 2, 2);
+        array2 = JSON.parse(moizeAmongIndex(3, 2, 2));
         expect(array2.length).toEqual(3);
-        array2 = moizeAmongIndex(3, 2, 2);
+        array2 = JSON.parse(moizeAmongIndex(3, 2, 2));
         expect(array2.length).toEqual(3);
     });
     //

@@ -232,7 +232,13 @@ describe("Solid test", () => {
         expect(C.isPointInsideSolid([4, 4, 4.9, 4])).toBeFalsy();
     });
     test("test JSON", () => {
-        const txt = sfb.exportToJSON();
+        const C = cube4D(2, 5);
+        const txt = C.exportToJSON();
+        console.log("solid to JSON "+txt);
         expect(true).toBeTruthy();
+
+        const jsontxt = '{ "name" : "solid" , "dimension" : 3 , "color" : "000000" , "faces" : [ { "face" : [-1,0,0,0,5] },{ "face" : [1,0,0,0,-2] },{ "face" : [0,-1,0,0,5] },{ "face" : [0,1,0,0,-2] },{ "face" : [0,0,-1,0,5] },{ "face" : [0,0,1,0,-2] },{ "face" : [0,0,0,-1,5] },{ "face" : [0,0,0,1,-2] }]}';
+        const sol = Solid.importFromJSON(JSON.parse(jsontxt)) ;
+        expect(sol.dimension).toEqual(3);
     });
 });

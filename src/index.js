@@ -1,7 +1,7 @@
 //import * from "./halfspace.js";
 export * from "./parameters.js";
 export { NDObject } from "./ndobject.js";
-export { Light } from "./light.js";
+// export { Light } from "./light.js";
 export { Space } from "./space.js";
 export { Face } from "./face.js";
 export { Solid } from "./solid.js";

@@ -37,7 +37,7 @@ describe("Solid test", () => {
         const C = cube4D(2, 5);
         C.selected = true;
         const r1 = rotXY(10);
-        C.transform(r1);
+        C.transform(r1, [0,0,0,0]);
         //space4.suffixSolid(C);
         //const space3_0 = space4.project(0);
 

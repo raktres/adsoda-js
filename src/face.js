@@ -14,10 +14,9 @@ import {
     getConstant,
     moizeAmongIndex
 } from "./halfspace.js";
-// import cloneDeep from "lodash/cloneDeep";
-// import {dot, multiply, substract,cross, atan2, unaryMinus, } as math from "mathjs";
 import { NDObject } from "./ndobject.js";
 import * as P from "./parameters";
+
 const core = require('mathjs/core') ;
 const math = core.create() ;
 
@@ -47,7 +46,7 @@ class Face extends NDObject {
 
     constructor(vector) {
         super("Face");
-        this.equ = [...vector].map(x => parseFloat(x));
+        this.equ = vector.map(x => parseFloat(x));
         this.touchingCorners = [];
         this.adjacentFaces = [];
         this.dim = this.equ.length - 1;
@@ -56,10 +55,8 @@ class Face extends NDObject {
     /**
      * @returns JSON face description
      */
-    toJSON() {
-        // return (exp = `{ name : ${this.name} , halfspace : ${this.equ}, color : ${this.color} } `);
-        const tmp = "toto"; //JSON.stringify(this.equ);
-        return { name: this.name, halfspace: tmp, color: this.color };
+    exportToJSON() {
+        return `{ "face" : ${JSON.stringify(this.equ)} }`;
     }
 
     /**
@@ -67,8 +64,7 @@ class Face extends NDObject {
      * @param {*} json
      */
     static importFromJSON(json) {
-        let obj = JSON.parse();
-        let tmp = new Face();
+        return new Face(json.face);
     }
 
     /**
@@ -79,7 +75,7 @@ class Face extends NDObject {
             this.equ
         } \n --- touching corners ${JSON.stringify(
             this.touchingCorners
-        )} \n --- nb of halfspaces : ${this.adjacentFaces.length} `;
+        )} \n --- nb of adjacent faces : ${this.adjacentFaces.length} `;
     }
 
     /**
@@ -94,7 +90,6 @@ class Face extends NDObject {
      */
     eraseAdjacentFaces() {
         this.adjacentFaces = [];
-        return this;
     }
 
     /**
@@ -123,7 +118,7 @@ class Face extends NDObject {
         //  since translating should not change the normal vector (the first n-1 terms).
         //
 
-        const dot = math.dot([...this.equ].slice(0, -1), vector);
+        const dot = math.dot(this.equ.slice(0, -1), vector);
         this.equ = constantAdd(this.equ, dot);
         return this;
     }
@@ -147,13 +142,13 @@ class Face extends NDObject {
         //
 
         //get non 0 coordinate
-        const coordindex = [...this.equ].findIndex(
+        const coordindex = this.equ.findIndex(
             x => Math.abs(x) > P.VERY_SMALL_NUM
         );
         // TODO vérifier si utilisaton not small_value x!=0
         const intercept =
             -getConstant(this.equ) / getCoordinate(this.equ, coordindex);
-        const coords = math.multiply(matrix, [...this.equ].slice(0, -1));
+        const coords = math.multiply(matrix, this.equ.slice(0, -1));
         //
         //  At this point we have found a point on the halfspace.  This point is
         //  (0, 0, ..., intercept, ..., 0, 0), where intercept is the ith coordinate
@@ -168,7 +163,7 @@ class Face extends NDObject {
 
         let sum = 0;
         for (let i = 0; i < coords.length; i++) {
-            sum += matrix[i][coordindex] * intercept * [...coords][i];
+            sum += matrix[i][coordindex] * intercept * coords[i];
         }
         this.equ = [...coords, -sum];
         return this;
@@ -214,7 +209,7 @@ class Face extends NDObject {
      * @todo évaluer l'impact de l'utilisation  de ...
      */
     flip() {
-        this.equ = [...this.equ].map(coord => -coord);
+        this.equ = this.equ.map(coord => -coord);
     }
 
     /**
@@ -224,7 +219,7 @@ class Face extends NDObject {
      * @returns boolean true if corner is added
      */
     suffixTouchingCorners(corner) {
-        const exist = this.touchingCorners.find(corn =>
+        const exist = [...this.touchingCorners].find(corn =>
             isCornerEqual(corn, corner)
         );
         if (!exist) {
@@ -238,21 +233,19 @@ class Face extends NDObject {
     /**
      *
      * @param {*} face
+     * @todo vérifier que face n'est pas déja dans la liste
      */
     suffixAdjacentFaces(face) {
         if (this != face) {
-            //TODO vérifier que face n'est pas déja dans la liste
-            //utilisation de set ?
             this.adjacentFaces = [...this.adjacentFaces, face];
         }
     }
 
     /**
-     * @returns boolean true if it is a real face ie number of corners >
-     * dimension
+     * @returns boolean true if it is a real face ie number of corners > dimension
      */
     isRealFace() {
-        return [...this.touchingCorners].length >= this.dim;
+        return this.touchingCorners.length >= this.dim;
     }
 
     /**
@@ -318,8 +311,8 @@ class Face extends NDObject {
     intersectionsIntoFace(adjaFace, axe) {
         const aF = adjaFace.pvFactor(axe);
         const tF = this.pvFactor(axe);
-        const aEq = [...adjaFace.equ].map(x => x * tF);
-        const tEq = [...this.equ].map(x => x * aF);
+        const aEq = adjaFace.equ.map(x => x * tF);
+        const tEq = this.equ.map(x => x * aF);
         let diffEq = math.subtract(tEq, aEq);
 
         const aTC = [...adjaFace.touchingCorners];
@@ -396,7 +389,6 @@ class Face extends NDObject {
         if (this.isBackFace(axe)) return false;
 
         const newFace = new Face(this.equ);
-        //cloneFace.touchingCorners
         newFace.touchingCorners = [...this.touchingCorners];
 
         //Just keep backface to get visible edge ;
@@ -406,7 +398,7 @@ class Face extends NDObject {
 
         // if all adjacent faces are front need to keep.
         // TODO verify if useful
-        if (adjaFaces.length == 0) return false;
+        //if (adjaFaces.length == 0) return false;
 
         let silFaces = [];
 
@@ -418,57 +410,25 @@ class Face extends NDObject {
         }
         return silFaces;
     }
-
-
 
     /**
      *
      * @param {*} axe
      * @returns array array of faces
+     * @todo faire converger avec silhouette
      */
     forceSilhouette(axe) {
         // if (this.isBackFace(axe)) return false;
 
-        // TODO !!!!! à quois sert newface ???
         const newFace = new Face(this.equ);
-        //cloneFace.touchingCorners
-        newFace.touchingCorners = this.touchingCorners;
-
-        //Just keep backface to get visible edge ;
+        newFace.touchingCorners = [...this.touchingCorners];
         const adjaFaces = [...this.adjacentFaces];
-
-        // if all adjacent faces are front need to keep.
-        // TODO verify if useful
-        // if (adjaFaces.length == 0) return false;
-
         let silFaces = [];
-
         for (const aFace of adjaFaces) {
             const nface = newFace.intersectionIntoSilhouetteFace(aFace, axe);
-            if (nface) {
-                silFaces = [...silFaces, nface];
-            }
+            if (nface) { silFaces.push(nface); }
         }
         return silFaces;
-    }
-
-    /**
-     *
-     * @param {*} axe
-     */
-    sliceShape(axe) {
-        const newFace = new Face(this.equ);
-        //cloneFace.touchingCorners
-        newFace.touchingCorners = [...this.touchingCorners];
-        let shapeFaces = [];
-        const adjaFaces = [...this.adjacentFaces];
-        for (const aFace of adjaFaces) {
-            const nface = newFace.intersectionIntoSilhouetteFace(aFace, axe);
-            if (nface) {
-                shapeFaces = [...shapeFaces, nface];
-            }
-        }
-        return [...shapeFaces];
     }
 
     /**
@@ -476,14 +436,13 @@ class Face extends NDObject {
      *
      */
     orderedCorners() {
-        const corners = [...this.touchingCorners]; //[...this.corners];
+        const corners = [...this.touchingCorners]; 
         const ci = corners[0];
-        const cf = corners[corners.length - 1];
-        //face reference
+        const vequ = this.equ.slice(0, -1);
         const vref = math.subtract(ci, corners[1]);
         return corners
             .map(corner => [
-                order3D(corner, this.equ.slice(0, -1), ci, vref),
+                order3D(corner, vequ, ci, vref),
                 corner
             ])
             .sort(function(a, b) {
@@ -513,7 +472,7 @@ class Face extends NDObject {
      * @returns ?
      */
     static facesIntersection(faces) {
-        const hyps = faces.map(face => [...face.equ]);
+        const hyps = faces.map(face => face.equ);
         return intersectHyperplanes(hyps);
     }
 
@@ -524,7 +483,7 @@ class Face extends NDObject {
      * @returns ?
      */
     static facesRefIntersection(faces, refs) {
-        const hyps = refs.map(ref => [...faces[ref].equ]);
+        const hyps = refs.map(ref => faces[ref].equ);
         return intersectHyperplanes(hyps);
     }
 

@@ -34,7 +34,7 @@ class Solid extends NDObject {
             let halffiltered = [];
 
             for (const half of halfspaces) {
-                const halffil = [...half].map(x => parseFloat(x));
+                const halffil = half.map(x => parseFloat(x));
                 const exist = [...halffiltered].find(halff =>
                     isCornerEqual(halff, halffil)
                 );
@@ -60,27 +60,30 @@ class Solid extends NDObject {
      * @returns JSON
      */
     exportToJSON() {
-        //let json = `{ name : "${this.name}" , dimension : ${this.dimension} , color : "${this.color}" , faces : { `;
-        //this.faces.forEach( face =>
-        //    json += face.exportToJSON()
-        //);
-        //json += "}}";
-        let json = JSON.stringify(this, [
-            "name",
-            "dimension",
-            "color",
-            "faces"
-        ]);
+        let json = `{ "solidname" : "${this.name}" , "dimension" : ${this.dimension} ,
+         "color" : "${this.color}" , "faces" : [ `;
+        json += [...this.faces].map( face => face.exportToJSON()).join(",");
+        json += "]}";
+        // let json = JSON.stringify(this, [
+        //    "name",
+        //    "dimension",
+        //    "faces"
+        // ]);
         return json;
     }
 
     /**
      * create a face from a json
-     * @param {JSON}
+     * @param {JSON} JSON (not a string)
      */
     static importFromJSON(json) {
-        let obj = JSON.parse();
-        let tmp = new Face();
+        const sol = new Solid(parseInt(json.dimension)) ;
+        sol.name = json.solidname ;
+        sol.color = json.color ;
+        [...json.faces].forEach(fac => {
+            sol.addFace(Face.importFromJSON(fac));
+        });  
+        return sol ;
     }
 
     /**
@@ -153,10 +156,15 @@ class Solid extends NDObject {
         this.silhouettes = [];
     }
     /**
-     *
+     * @todo vérifrie si nouvelle condition de filtre est utile
      */
     filterRealFaces() {
-        this.faces = [...this.faces].filter(face => face.isRealFace());
+        const _t = this;
+        this.faces = [...this.faces].
+            filter(face => face.isRealFace() && 
+                !([...face.touchingCorners].every(corner => !(_t.isPointInsideOrOnSolid(corner)))) 
+            );
+
     }
 
     /**
@@ -252,7 +260,6 @@ class Solid extends NDObject {
     processCorner(facesref, corner) {
         if (this.isCornerAdded(corner)) {
             Face.updateAdjacentFacesRefs(this.faces, facesref, corner);
-            //Face.updateAdjacentFaces(faces, corner);
         } else {
         }
     }
@@ -267,12 +274,7 @@ class Solid extends NDObject {
             this.processCorner(facesref, intersection);
         }
     }
-    /*  computeIntersection(faces) {
-        const intersection = Face.facesIntersection(faces);
-        if (intersection) {
-            this.processCorner(faces, intersection);
-        }
-    } */
+
 
     /**
      *
@@ -361,9 +363,9 @@ class Solid extends NDObject {
      */
     project(axe) {
         //TODO ajouter lights et ambient
-        const projSol = this.clone() ; // cloneDeep(this);
+        const projSol = this.clone() ; 
         // projSol.selected = this.selected;
-       // projSol.propagateSelection();
+        // projSol.propagateSelection();
         projSol.name = "projection " + projSol.name;
         projSol.ensureAdjacencies();
         projSol.ensureSilhouettes();
@@ -384,11 +386,15 @@ class Solid extends NDObject {
      * @todo reprendre l'axe de projection
      */
     sliceProject(hyperplane) {
-        const projSol = this.clone() ;// Deep(this);
+        const projSol = this.clone() ;
         const projFace = new Face(hyperplane);
         projSol.addFace(projFace);
         projSol.ensureAdjacencies();
-
+        const point = projFace.touchingCorners[0];
+        if (!projSol.isPointInsideOrOnSolid(point)){
+            console.log("not real face");
+            return [];
+        }
         const sil = projFace.forceSilhouette(2);
         const halfspaces = [...sil].map(face =>
             Solid.silProject(face, 2)
@@ -399,38 +405,6 @@ class Solid extends NDObject {
         solid.color = projSol.color;
         solid.name = projSol.name + "|Pcut|";
         return [solid];
- 
-
-
-
-/*         const projSol = this.clone() ;// Deep(this);
-        const projFace = new Face(hyperplane);
-        projFace.slice = true;
-        // console.log("proj face :"+projFace.slice );
-        // let tmp = [...projSol.faces].map(face => face.slice);
-        // console.log("1-"+JSON.stringify(tmp)) ;
-        projSol.addFace(projFace);
-        // pour faire une coupe, crée une tranche et la traite comme un solide
-        // on pourrait directement utiliser la face de découpe
-
-        const eq2 = constantAdd([...hyperplane].map(coord => -coord), -1);
-        //const projFace2 = new Face(eq2);
-        projSol.addFace(new Face(eq2));
-        // return projSol.project(2);
-        projSol.ensureAdjacencies();
-        
-        const sil = projSol.createSilhouette(2);
-        
-        const halfspaces = [...sil].map(face =>
-            Solid.silProject(face, 2)
-        );
-        const dim = projSol.dimension - 1;
-        const solid = new Solid(dim, halfspaces);
-        //TODO color of projection is function of lights
-        solid.color = projSol.color;
-        solid.name = projSol.name + "|Pcut|";
-return [solid]; */
-
     }
 
     /**
@@ -440,7 +414,7 @@ return [solid]; */
      */
     translate(vector, force = false) {
         // if (!this.selected && !force ) return this;
-        vector = [...vector].map(x => parseFloat(x));
+        vector = vector.map(x => parseFloat(x));
         this.faces = [...this.faces].map(face => face.translate(vector));
         this.unvalidSolid();
         return this;
@@ -453,15 +427,11 @@ return [solid]; */
      */
     transform(matrix, center, force = false) {
         // if (!this.selected && !force ) return this;
-
-        let centerl = [...center].map(x => -parseFloat(x));
-        this.faces = [...this.faces].map(face => face.translate(centerl));
-
-        this.faces = [...this.faces].map(face => face.transform(matrix));
-
-        centerl = [...center].map(x => parseFloat(x));
-        this.faces = [...this.faces].map(face => face.translate(centerl));
-
+        let centerl = center.map(x => -parseFloat(x));
+        this.faces = [...this.faces].map(face => 
+            face.translate(centerl).
+                transform(matrix).
+                translate(center));
         this.unvalidSolid();
         return this;
     }
@@ -493,7 +463,6 @@ return [solid]; */
      * @returns -1 or 1 or false
      */
     checkOrientation(point, axe) {
-        //const faces = [...cloneDeep(this.faces)];
         for (const face of [...this.faces]) {
             if (!face.isPointInsideFace(point)) {
                 if (face.isBackFace(axe)) {
@@ -629,7 +598,6 @@ return [solid]; */
      */
     static initSolidFromFace(face) {
         const solid = new Solid(face.equ.length - 1);
-        // const equ = [...face.equ] ;
         solid.suffixFace(face);
         solid.selected = face.selected;
         return solid;

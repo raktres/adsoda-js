@@ -134,6 +134,7 @@ export function positionPoint(halfspace, point) {
  *
  * @param {*} vector
  * @param {*} axe
+ * @todo replace axe with a vector
  */
 export function projectVector(vector, axe) {
     return [...vector.slice(0, axe), ...vector.slice(axe + 1, vector.length)];
@@ -167,12 +168,11 @@ export function intersectHyperplanes(hyperplanes) {
  */
 export function amongIndex(l, a, b) {
     let extract = [[]];
-    let ref = [];
+    let ref = new Array(l);
     for (let i = 0; i < l; i++) {
         ref[i] = i;
     }
-    //const range = (start,end) => new Array(end - start +1).fill(undefined).map((value,index)=>index+start);
-    // for (const i in ref) {
+    
     for (let i=0; i<l; i++ ){
 
         //for (const j in extract) {
