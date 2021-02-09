@@ -64,4 +64,9 @@ typings/
 #
 .vscode/
 lib/
+out/
+npmold
+.eslintrc old.json
+dist/
+
 

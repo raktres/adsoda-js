@@ -8,9 +8,9 @@
 /**
  * @constant
  */
-export const MAX_FACE_PER_CORNER = 15;
+export const MAX_FACE_PER_CORNER = 15
 
 /**
  * @constant
  */
-export const VERY_SMALL_NUM = 0.00001;
+export const VERY_SMALL_NUM = 0.00001

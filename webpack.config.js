@@ -1,6 +1,4 @@
-
-const path = require('path');
-
+const path = require('path')
 
 module.exports = {
   entry: './src/index.js',
@@ -11,34 +9,31 @@ module.exports = {
     filename: 'adsoda.js',
     library: 'adsoda',
     libraryTarget: 'umd',
-    umdNamedDefine:true,
+    umdNamedDefine: true,
     // https://stackoverflow.com/questions/49111086/webpack-4-universal-library-target
-    globalObject: `(typeof self !== 'undefined' ? self : this)`
-
-  },//,
+    globalObject: "(typeof self !== 'undefined' ? self : this)"
+  }, //,
   optimization: {
-  //  splitChunks:{      chunks: 'all'    },
+    //  splitChunks:{      chunks: 'all'    },
     usedExports: true
   },
   module: {
-    rules: [ 
-        {
-          loader: 'babel-loader',
-          test: /\.js?/,
-          //include: [path.resolve(__dirname,"src")],
-          //use: 'babel-loader',
-          exclude: /node_modules/,
-          //query:{
-          //  presets:['es2015'],
-          //  plugins:['transform-runtime']
-         // }
-
-        },
-    ] 
+    rules: [
+      {
+        loader: 'babel-loader',
+        test: /\.js?/,
+        // include: [path.resolve(__dirname,"src")],
+        // use: 'babel-loader',
+        exclude: /node_modules/
+        // query:{
+        //  presets:['es2015'],
+        //  plugins:['transform-runtime']
+        // }
+      }
+    ]
   }
- 
-  //rules: [
-  //  { test: /\.js$/, exclude: /node_modules/, loader: "babel-loader" }
-  //]
 
-};
+  // rules: [
+  //  { test: /\.js$/, exclude: /node_modules/, loader: "babel-loader" }
+  // ]
+}
