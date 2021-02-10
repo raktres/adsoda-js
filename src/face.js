@@ -175,8 +175,8 @@ class Face extends NDObject {
    * @returns boolean if it is a backface
    */
   isBackFace (axe) {
-    return this.orientation(axe) <= 0
-    //  return this.orientation(axe) <=  P.VERY_SMALL_NUM ;
+    // return this.orientation(axe) <= 0
+    return this.orientation(axe) <= P.VERY_SMALL_NUM
   }
 
   /**
@@ -185,12 +185,11 @@ class Face extends NDObject {
    * @returns number sign of coef
    */
   orientation (axe) {
-    //   const val = this.equ[axe] ;
-    //   if(val < -P.VERY_SMALL_NUM) return -1 ;
-    //   if(val > P.VERY_SMALL_NUM) return 1 ;
-    //   return 0 ;
-
-    return Math.sign(this.equ[axe])
+    const val = this.equ[axe]
+    if (val < -P.VERY_SMALL_NUM) return -1
+    if (val > P.VERY_SMALL_NUM) return 1
+    return 0
+    //    return Math.sign(this.equ[axe])
   }
 
   /**
