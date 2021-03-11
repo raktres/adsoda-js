@@ -175,8 +175,8 @@ class Face extends NDObject {
    * @returns boolean if it is a backface
    */
   isBackFace (axe) {
-    // return this.orientation(axe) <= 0
-    return this.orientation(axe) <= P.VERY_SMALL_NUM
+    return this.orientation(axe) <= 0
+    // return this.orientation(axe) <= P.VERY_SMALL_NUM
   }
 
   /**
@@ -233,8 +233,16 @@ class Face extends NDObject {
    *
    * @param {*} face
    * @todo vérifier que face n'est pas déja dans la liste
+   * modif : ne pas ajouter une face si elle existe déjà dans la liste
    */
   suffixAdjacentFaces (face) {
+    const faceEqu = JSON.stringify(face.equ)
+    // console.log(faceEqu)
+    if (this.adjacentFaces.find(aface => { 
+      // console.log(JSON.stringify(aface.equ),faceEqu)
+      return JSON.stringify(aface.equ) === faceEqu
+       })) return false
+    // console.log('add', face.equ)
     if (this !== face) {
       this.adjacentFaces = [...this.adjacentFaces, face]
     }
@@ -494,8 +502,8 @@ class Face extends NDObject {
   static updateAdjacentFacesRefs (faces, refs, corner) {
     refs.forEach(ref => faces[ref].suffixTouchingCorners(corner))
 
-    const grouprefs = JSON.parse(moizeAmongIndex(refs.length, 2, 2))
-
+   //  const grouprefs = JSON.parse(moizeAmongIndex(refs.length, 2, 2))
+   const grouprefs = moizeAmongIndex(refs.length, 2, 2)
     for (const groupref of grouprefs) {
       faces[refs[groupref[0]]].suffixAdjacentFaces(faces[refs[groupref[1]]])
       faces[refs[groupref[1]]].suffixAdjacentFaces(faces[refs[groupref[0]]])

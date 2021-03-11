@@ -14,7 +14,7 @@ class NDObject {
     this.name = name || 'nDobject'
     this.id = 0
     // TODO: utiliser les mêmes couleurs que Three
-    this.color = color || '000000'
+    this.color = color || 0x000000
     this.selected = false // TODO vérifier
   }
 }

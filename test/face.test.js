@@ -1,6 +1,7 @@
 /* globals describe, expect, test */
 
 import { Face } from '../src/face.js'
+import * as P from '../src/parameters.js'
 
 describe('Face test', () => {
   test('flipFace', () => {
@@ -22,7 +23,7 @@ describe('Face test', () => {
   })
 
   test('isBackFace 1', () => {
-    const face = new Face([0, 2, -3])
+    const face = new Face([0, 2, -3, P.VERY_SMALL_NUM / 2, P.VERY_SMALL_NUM * 2])
 
     const x = face.isBackFace(0)
     expect(x).toBeTruthy()
@@ -30,6 +31,8 @@ describe('Face test', () => {
     expect(y).toBeTruthy()
     const z = face.isBackFace(1)
     expect(z).toBeFalsy()
+    expect(face.isBackFace(3)).toBeTruthy()
+    expect(face.isBackFace(4)).toBeFalsy()
   })
 
   test('suffixTouchingCorners', () => {

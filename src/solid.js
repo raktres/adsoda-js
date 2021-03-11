@@ -11,10 +11,21 @@ import { Face } from './face.js'
 import {
   projectVector,
   isCornerEqual,
-  moizeAmongIndex
+  moizeAmongIndex,
+  amongIndex,
+  findnormal,
+  positionPoint
   // constantAdd
 } from './halfspace.js'
 import * as P from './parameters.js'
+
+function uniqBy(a, key) {
+  var seen = {}
+  return a.filter(function(item) {
+      var k = key(item) 
+      return seen.hasOwnProperty(k) ? false : (seen[k] = true)
+  })
+}
 
 class Solid extends NDObject {
   /*
@@ -28,11 +39,13 @@ class Solid extends NDObject {
     this.corners = []
     this.silhouettes = []
     this.adjacenciesValid = false
+    // TODO: verifi à quoi ça sert
     if (halfspaces) {
       const _t = this
 
-      let halffiltered = []
-
+      let halffiltered = uniqBy(halfspaces, JSON.stringify)
+      // []
+/*
       for (const half of halfspaces) {
         const halffil = half.map(x => parseFloat(x))
         const exist = [...halffiltered].find(halff =>
@@ -44,8 +57,26 @@ class Solid extends NDObject {
           //
         }
       }
+  */    
       halffiltered.forEach(HS => _t.suffixFace(new Face(HS)))
       this.ensureAdjacencies()
+      // const th = this
+      console.log("half bef",halffiltered)
+      /*
+      halffiltered = halffiltered.map(hype => {
+        const posit = _t.corners.map(pt => positionPoint(hype,pt))
+        if (posit.every(x => x >= 0)) { return hype }
+        // else if (posit.every(x => x <= 0)) { return hype.map(coord => -coord) }
+        else { return false }
+      }).filter(Boolean)
+    
+      console.log("half aft",halffiltered)
+      _t.faces.length = 0
+      halffiltered.forEach(HS => _t.suffixFace(new Face(HS)))
+      this.adjacenciesValid = false
+      this.ensureAdjacencies()
+      */
+      
     }
   }
 
@@ -288,10 +319,12 @@ class Solid extends NDObject {
    *
    */
   computeAdjacencies () {
-    const groupsFaces = JSON.parse(
-      moizeAmongIndex(this.faces.length, this.dimension, P.MAX_FACE_PER_CORNER)
-    )
-    groupsFaces.forEach(group => this.computeIntersection(group))
+    const groupsFaces = moizeAmongIndex(this.faces.length, this.dimension, P.MAX_FACE_PER_CORNER) 
+    const n = groupsFaces.length
+    for (let index = 0; index < n; index++) {
+      this.computeIntersection(groupsFaces[index])
+    }
+    // groupsFaces.forEach(group => this.computeIntersection(group))
   }
 
   /**
@@ -320,7 +353,7 @@ class Solid extends NDObject {
    */
   ensureSilhouettes () {
     if (this.silhouettes.length === 0) {
-      for (let i = 0; i < this.dimension; i++) {
+      for (let i = 0 ; i < this.dimension; i++) {
         this.silhouettes[i] = this.createSilhouette(i)
       }
     }
@@ -330,14 +363,24 @@ class Solid extends NDObject {
    *
    * @param {*} axe
    * @return {array} silhouettes
+   * TODO: correction, ne pas ajouter la silhouette si existe déjà
    */
   createSilhouette (axe) {
     const sFaces = [...this.faces]
     let sil = []
-    for (const face of sFaces) {
-      const tmp = face.silhouette(axe)
+    const seen = {}
+    const n = sFaces.length
+    for (let index = 0; index < n; index++) {
+    // for (const face of sFaces) {
+      const tmp = sFaces[index].silhouette(axe)
       if (tmp) {
-        sil = [...sil, ...tmp]
+        tmp.forEach( el => {
+        const k = JSON.stringify(el.equ)
+        if ( ! seen.hasOwnProperty(k) ){
+          seen[k] = true
+          sil.push(el)
+        }
+        })
       }
     }
     return sil
@@ -375,9 +418,11 @@ class Solid extends NDObject {
     projSol.name = 'projection ' + projSol.name
     projSol.ensureAdjacencies()
     projSol.ensureSilhouettes()
-    const halfspaces = [...projSol.silhouettes[axe]].map(face =>
+    let halfspaces = [...projSol.silhouettes[axe]].map(face =>
       Solid.silProject(face, axe)
     )
+    // TODO: verif
+    // halfspaces = uniqBy(halfspaces, JSON.stringify)
     const dim = projSol.dimension - 1
     const solid = new Solid(dim, halfspaces)
     // TODO color of projection is function of lights
@@ -402,7 +447,9 @@ class Solid extends NDObject {
       return []
     }
     const sil = projFace.forceSilhouette(2)
-    const halfspaces = [...sil].map(face => Solid.silProject(face, 2))
+    // TODO: verif
+    let halfspaces = [...sil].map(face => Solid.silProject(face, 2))
+    halfspaces = uniqBy(halfspaces, JSON.stringify)
     const dim = projSol.dimension - 1
     const solid = new Solid(dim, halfspaces)
     // TODO color of projection is function of lights
@@ -641,6 +688,39 @@ class Solid extends NDObject {
     // newface.dim = newface.dim - 1 ;
     // const nfaces = [...face.intersectionsIntoFaces()];
     return projectVector(face.equ, axe)
+  }
+
+  static createSolidFromVertices (vertices) {
+    const dim = vertices[0].length
+    const listgroup =  moizeAmongIndex( vertices.length, dim, dim ) // JSON.parse()
+    let hyperplanes = listgroup.map( el => {
+      const points = el.map(idx => {
+        return [...vertices[idx]]
+      })
+      return points
+    })
+    hyperplanes = hyperplanes.map( points => {
+      return findnormal(points)
+    }).filter(el => el)
+    // on a maintenant dans hyperplanes l'ensemble des hyperplans induits par les différents points.
+    // attention cependant, il manque ceux passant par l'origine.
+    // il faut maintenant vérifier l'orientation de ces hyperplans
+    
+    hyperplanes = hyperplanes.map((hype,id) => {
+      const posit = vertices.map(pt => positionPoint(hype,pt))
+      if (posit.every(x => x >= 0)) { return hype }
+      else if (posit.every(x => x <= 0)) { return hype.map(coord => -coord) }
+      else { return false }
+    })
+    // on a maintenant tous les hyperplans générés par les points, on a donc beaucoup de doublons, 
+    // que l'on filtre
+    hyperplanes = uniqBy(hyperplanes, JSON.stringify)
+
+    const hpFiltered = hyperplanes.filter(el => el)
+    // on a maintenant les hyperplans englobants, on en déduit les faces.
+    const sol = this.createSolidFromHalfSpaces(hpFiltered)
+    
+    return sol 
   }
 }
 

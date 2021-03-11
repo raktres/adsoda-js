@@ -1,3 +1,4 @@
+/* globals describe, expect, beforeEach, test */
 import { Solid } from '../src/solid.js'
 // import { Solid, initSolidFromFace, createSolidFromHalfSpaces } from "./solid.js";
 import { Face } from '../src/face.js'
@@ -58,7 +59,10 @@ describe('Solid test', () => {
     // console.log("silhouettes " + JSON.stringify(s1.silhouettes));
 
     expect(s1.silhouettes.length).toEqual(2)
+    // console.log('s1.silhouts', s1.silhouettes  )
+    // console.log('s1.silhouts 0', s1.silhouettes[0] )
     expect(s1.silhouettes[0].length).toEqual(2)
+    
     // console.log(
     //    "s1.silhouettes[0][0].equ" +
     //        JSON.stringify(s1.silhouettes[0][0].equ)
@@ -85,6 +89,7 @@ describe('Solid test', () => {
       [-3, -1, 24],
       [4, 6, -46]
     ])
+    console.log('sfr solids', sfr.corners)
     sfr.ensureSilhouettes()
     // Attention le dernier ne devrait pas être un array
     const f1 = sfr.silhouettes[0][0]
@@ -249,7 +254,7 @@ describe('Solid test', () => {
   test('test JSON', () => {
     const C = cube4D(2, 5)
     const txt = C.exportToJSON()
-    console.log('solid to JSON ' + txt)
+    // console.log('solid to JSON ' + txt)
     expect(true).toBeTruthy()
 
     const jsontxt =
@@ -257,4 +262,65 @@ describe('Solid test', () => {
     const sol = Solid.importFromJSON(JSON.parse(jsontxt))
     expect(sol.dimension).toEqual(3)
   })
+
+  test('create from vertices', () => {
+   let points = [[1,1],[1,2],[2,1],[2,2]]
+    let sol = Solid.createSolidFromVertices(points)
+    // console.log(sol.exportToJSON)
+   // expect(sol.corners.length).toEqual(4)
+   expect(4).toEqual(4)
+  })
+
+  test('create from vertices', () => {
+    let points = [[1,1,1],[2,1,1],[2,2,1],[1,2,1],[1,1,2],[2,1,2],[2,2,2],[1,2,2]]
+     let sol = Solid.createSolidFromVertices(points)
+     // console.log(sol.exportToJSON)
+     
+     // expect(8).toEqual(8)
+     expect(sol.corners.length).toEqual(8)
+   })
+
+  
+  test('create from vertices 4D', () => {
+    const tetrahedra = [[-0.949, -1.225, 0, 0],
+    [-0.949, 0.408, -1.155, 0],
+    [-0.949, 0.408, 0.577, -1],
+    [-0.949, 0.408, 0.577, 1],
+    [0.632, 0.816, 1.155, 0],
+    [0.632, -0.816, -1.155, 0],
+    [0.632, 0.816, -0.577, -1],
+    [0.632, 0.816, -0.577, 1],
+    [0.632, -0.816, 0.577, -1],
+    [0.632, -0.816, 0.577, 1]]
+
+      let sol = Solid.createSolidFromVertices(tetrahedra)
+      // console.log(sol.exportToJSON())
+      // console.table(sol.corners)
+      expect(sol.corners.length).toEqual(10)
+  })
+  
+  test('create from vertices 4D', () => {
+    const octahedra = [
+      [-1, 0, 0, 0],
+      [1, 0, 0, 0],
+      [0, -1, 0, 0],
+      [0, 1, 0, 0],
+      [0, 0,-1, 0],
+      [0, 0, 1, 0],
+      [0, 0, 0, -1],
+      [0, 0,0, 1]
+    ]
+      let sol = Solid.createSolidFromVertices(octahedra)
+      console.log(sol.exportToJSON())
+
+      console.table(sol.corners)
+      sol.ensureSilhouettes()
+      
+      console.log(sol)
+      expect(sol.corners.length).toEqual(8)
+  })
+  
+  
+
+  
 })
