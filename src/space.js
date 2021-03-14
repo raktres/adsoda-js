@@ -74,7 +74,7 @@ class Space {
    */
   ensureSolids () {
     this.solids.forEach(solid => {
-      solid.ensureAdjacencies()
+      solid.ensureFaces()
       solid.ensureSilhouettes()
     })
   }
@@ -226,7 +226,7 @@ class Space {
   createSolid (halfspaces) {
     const solid = new Solid(this.dimension)
     halfspaces.forEach(HS => solid.suffixFace(new Face(HS)))
-    solid.ensureAdjacencies()
+    solid.ensureFaces()
     this.suffixSolid(solid)
     return solid
   }

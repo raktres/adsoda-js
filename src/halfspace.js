@@ -90,8 +90,7 @@ export function echelon ( matrix ) {
  */
 export function nonZeroRows ( matrix ) {
   return matrix.filter(
-    //  row => !row.every(val => Math.abs(val) < P.VERY_SMALL_NUM)
-    row => !row.every( val => val < P.VERY_SMALL_NUM && val > -P.VERY_SMALL_NUM )
+    row => row.find( val => !(val < P.VERY_SMALL_NUM && val > -P.VERY_SMALL_NUM ))
   )
 }
 
@@ -99,6 +98,7 @@ export function nonZeroRows ( matrix ) {
  *
  * @param {*} matrix
  * @returns vector solution of the system
+ * TODO: remplacer map
  */
 export function solution ( matrix ) {
   const mat1 = echelon( [...matrix] )
@@ -174,6 +174,7 @@ export function intersectHyperplanes ( hyperplanes ) {
  * @todo memoize
  */
 export function amongIndex ( l, a, b ) {
+  // console.log('moize among', l, a, b)
   const extract = [[]]
   const ref = new Array( l )
   for ( let i = 0; i < l; i++ ) {
@@ -187,6 +188,7 @@ export function amongIndex ( l, a, b ) {
     }
   }
   const res = extract.filter( sub => sub.length >= a && sub.length <= b )
+  res.sort(function(a, b){ return b.length - a.length })
   // TODO: pourquoi JSONIFIÉ ?
   // return JSON.stringify( res )
   return res

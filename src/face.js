@@ -48,9 +48,11 @@ class Face extends NDObject {
 
   constructor (vector) {
     super('Face')
-    this.equ = vector.map(x => parseFloat(x))
+    this.solid = ''
+    this.equ = vector.map(parseFloat)
     this.touchingCorners = []
     this.adjacentFaces = []
+    this.tempAdja = new Set()
     this.dim = this.equ.length - 1
   }
 
@@ -120,8 +122,11 @@ class Face extends NDObject {
     //  since translating should not change the normal vector (the first n-1 terms).
     //
 
+    // TODO: remplacer matdot
+    // console.log('face trans av ', this.equ )
     const dot = matdot(this.equ.slice(0, -1), vector)
     this.equ = constantAdd(this.equ, dot)
+    // console.log('face trans ap ', this.equ )
     return this
   }
 
@@ -162,9 +167,11 @@ class Face extends NDObject {
     //
 
     let sum = 0
-    for (let i = 0; i < coords.length; i++) {
+    const n = coords.length
+    for (let i = 0; i < n; i++) {
       sum += matrix[i][coordindex] * intercept * coords[i]
     }
+    // TODO: remplacer par push(sum) ?
     this.equ = [...coords, -sum]
     return this
   }
@@ -234,6 +241,7 @@ class Face extends NDObject {
    * @param {*} face
    * @todo vérifier que face n'est pas déja dans la liste
    * modif : ne pas ajouter une face si elle existe déjà dans la liste
+   * TODO: mettre des références facile
    */
   suffixAdjacentFaces (face) {
     const faceEqu = JSON.stringify(face.equ)
@@ -300,6 +308,10 @@ class Face extends NDObject {
     return positionPoint(this.equ, point) > P.VERY_SMALL_NUM
   }
 
+  isPointOnFace (point) {
+    const pos = positionPoint(this.equ, point)
+    return  pos > -P.VERY_SMALL_NUM && pos < P.VERY_SMALL_NUM
+  }
   /**
    *
    * @param {*} axe
@@ -391,10 +403,13 @@ class Face extends NDObject {
    *
    * @param {*} axe
    * @returns array array of faces
+   * TODO: utliser liste de référence dansr adj faces
    */
   silhouette (axe) {
-    if (this.isBackFace(axe)) return false
-
+    if (this.isBackFace(axe)) {
+     // console.log('back face', this.equ)
+      return false
+    }
     const newFace = new Face(this.equ)
     newFace.touchingCorners = [...this.touchingCorners]
 
@@ -402,19 +417,19 @@ class Face extends NDObject {
     const adjaFaces = [
       ...this.adjacentFaces.filter(face => face.isBackFace(axe))
     ]
-
+    // console.log(this.equ, adjaFaces.map(face => face.equ))
     // if all adjacent faces are front need to keep.
     // TODO verify if useful
     // if (adjaFaces.length == 0) return false;
 
     let silFaces = []
-
-    for (const aFace of adjaFaces) {
+    adjaFaces.forEach(aFace => {
+    // for (const aFace of adjaFaces) {
       const nface = newFace.intersectionIntoSilhouetteFace(aFace, axe)
       if (nface) {
         silFaces = [...silFaces, nface]
       }
-    }
+    })
     return silFaces
   }
 
@@ -431,12 +446,14 @@ class Face extends NDObject {
     newFace.touchingCorners = [...this.touchingCorners]
     const adjaFaces = [...this.adjacentFaces]
     const silFaces = []
-    for (const aFace of adjaFaces) {
+    // const n = adjaFaces.length
+    // for (const aFace of adjaFaces)
+    adjaFaces.forEach(aFace => {
       const nface = newFace.intersectionIntoSilhouetteFace(aFace, axe)
       if (nface) {
         silFaces.push(nface)
       }
-    }
+    })
     return silFaces
   }
 
@@ -498,16 +515,21 @@ class Face extends NDObject {
    * @param {*} faces
    * @param {*} refs
    * @param {*} corner
+   * TODO: travailler sur les index plutôt que sur les faces
    */
   static updateAdjacentFacesRefs (faces, refs, corner) {
+    // TODO: pas au bon endroit
     refs.forEach(ref => faces[ref].suffixTouchingCorners(corner))
 
    //  const grouprefs = JSON.parse(moizeAmongIndex(refs.length, 2, 2))
    const grouprefs = moizeAmongIndex(refs.length, 2, 2)
-    for (const groupref of grouprefs) {
-      faces[refs[groupref[0]]].suffixAdjacentFaces(faces[refs[groupref[1]]])
-      faces[refs[groupref[1]]].suffixAdjacentFaces(faces[refs[groupref[0]]])
-    }
+    grouprefs.forEach(groupref => {
+      faces[refs[groupref[0]]].tempAdja.add(refs[groupref[1]])
+      faces[refs[groupref[1]]].tempAdja.add(refs[groupref[0]])
+
+      // faces[refs[groupref[0]]].suffixAdjacentFaces(faces[refs[groupref[1]]])
+      // faces[refs[groupref[1]]].suffixAdjacentFaces(faces[refs[groupref[0]]])
+    })
     // intersectHyperplanes
   }
 }

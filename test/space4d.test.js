@@ -43,6 +43,7 @@ describe('Solid test', () => {
     C.selected = true
     const r1 = rotXY(10)
     C.transform(r1, [0, 0, 0, 0])
+    C.ensureFaces()
     // space4.suffixSolid(C);
     // const space3_0 = space4.project(0);
 
