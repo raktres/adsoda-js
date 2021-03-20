@@ -164,6 +164,33 @@ export function intersectHyperplanes ( hyperplanes ) {
   return result.length === dimension ? result : false
 }
 
+
+export function amongIndex0(l, a, arr_max)
+ {
+    var result_set = [], 
+        result;
+    
+   
+for(var x = 0; x < Math.pow(2, l.length); x++)
+  {
+    result = [];
+    i = l.length - 1; 
+     do
+      {
+      if( (x & (1 << i)) !== 0)
+          {
+             result.push(l[i]);
+           }
+        }  while(i--);
+    if( result.length >= a)
+       {
+          result_set.push(result);
+        }
+    }
+    return result_set.filter(x => x.length <= b); 
+}
+
+
 /**
  * return every compositions of index elements from l size wich size is
  * between a and b
@@ -204,10 +231,10 @@ export const moizeAmongIndex = moize( amongIndex )
  * @param {*} corner1
  * @param {*} corner2
  */
-export function isCornerEqual ( corner1, corner2 ) {
+export function isCornerEqual ( corner1, corner2, diff = P.VERY_SMALL_NUM ) {
   if ( corner1 instanceof Array && corner2 instanceof Array ) {
     for ( let i = 0; i < corner1.length; i++ ) {
-      if ( Math.abs( corner1[i] - corner2[i] ) > P.VERY_SMALL_NUM ) {
+      if ( Math.abs( corner1[i] - corner2[i] ) > diff ) {
         return false
       }
     }

@@ -50,7 +50,7 @@ describe( 'Solid test', () => {
     // console.log(s1.faces[1].logDetail());
     // console.log(s1.logSummary());
     expect( [...s1.corners].length ).toEqual( 4 )
-    expect( s1.faces[0].adjacentFaces.length ).toEqual( 2 )
+    expect( s1.faces[0].adjacentRefs.size ).toEqual( 2 )
   } )
 
   test( 'solid adjacencies', () => {
@@ -307,7 +307,7 @@ describe( 'Solid test', () => {
     console.log( 'sol ', sol.faces.map( f => f.equ ) )
     expect( sol.faces.length ).toEqual( 6 )
     expect( sol.corners.length ).toEqual( 6 )
-    let nb_adja = sol.faces.map( f => f.adjacentFaces.length )
+    let nb_adja = sol.faces.map( f => f.adjacentRefs.size )
 
     console.log( nb_adja )
     // expect(sol.corners.length).toEqual(4)
@@ -330,7 +330,7 @@ describe( 'Solid test', () => {
     console.log( 'corners 1', sol.corners )
     expect( sol.faces.length ).toEqual( 6 )
     expect( sol.corners.length ).toEqual( 6 )
-    nb_adja = sol.faces.map( f => f.adjacentFaces.length )
+    nb_adja = sol.faces.map( f => f.adjacentRefs.size)
 
     console.log( nb_adja )
     // expect(sol.corners.length).toEqual(4)
@@ -356,7 +356,7 @@ describe( 'Solid test', () => {
     console.log( 'corners 2', sol.corners )
     expect( sol.faces.length ).toEqual( 6 )
     expect( sol.corners.length ).toEqual( 6 )
-    nb_adja = sol.faces.map( f => f.adjacentFaces.length )
+    nb_adja = sol.faces.map( f => f.adjacentRefs.size )
 
     console.log( nb_adja )
     // expect(sol.corners.length).toEqual(4)
@@ -381,7 +381,7 @@ describe( 'Solid test', () => {
     console.log( 'corners 3', sol.corners )
     expect( sol.faces.length ).toEqual( 6 )
     expect( sol.corners.length ).toEqual( 6 )
-    nb_adja = sol.faces.map( f => f.adjacentFaces.length )
+    nb_adja = sol.faces.map( f => f.adjacentRefs.size )
 
     console.log( nb_adja )
     // expect(sol.corners.length).toEqual(4)
@@ -406,7 +406,7 @@ describe( 'Solid test', () => {
     console.log( 'corners 4', sol.corners )
     expect( sol.faces.length ).toEqual( 6 )
     expect( sol.corners.length ).toEqual( 6 )
-    nb_adja = sol.faces.map( f => f.adjacentFaces.length )
+    nb_adja = sol.faces.map( f => f.adjacentRefs.size )
 
     console.log( nb_adja )
     // expect(sol.corners.length).toEqual(4)
@@ -422,7 +422,7 @@ describe( 'Solid test', () => {
     console.log( 'sol ', sol.faces.map( f => f.equ ) )
     expect( sol.faces.length ).toEqual( 6 )
     expect( sol.corners.length ).toEqual( 6 )
-    nb_adja = sol.faces.map( f => f.adjacentFaces.length )
+    nb_adja = sol.faces.map( f => f.adjacentRefs.size )
 
     console.log( nb_adja )
     // expect(sol.corners.length).toEqual(4)
@@ -440,7 +440,7 @@ describe( 'Solid test', () => {
     // console.log('sol ', sol.faces.map(f=> f.equ ))
     // expect(sol.faces.length).toEqual(6)
     // expect(sol.corners.length).toEqual(6)
-    // let nb_adja = sol.faces.map(f => f.adjacentFaces.length)
+    // let nb_adja = sol.faces.map(f => f.adjacentRefs.size)
     const pr0 = sol.project( 0 )
     expect( sol.project( 0 )[0].corners[0] ).toEqual( [1] )
     expect( sol.project( 0 )[0].corners[1] ).toEqual( [5] )
@@ -484,6 +484,7 @@ describe( 'Solid test', () => {
       [0, 0, 1]
     ]
     sol.transform( rot, [1.5, 1.5, 1.5] )
+    sol.ensureSilhouettes()
     // sol.translate([1.5, 1.5, 1.5])
     /*
     d = 47
@@ -500,6 +501,7 @@ describe( 'Solid test', () => {
     console.log( sol.project( 0 )[0].corners )
     console.log( sol.project( 1 )[0].corners )
     console.log( sol.project( 2 )[0].corners )
+
     // console.log(sol.project(2)[0].faces)
 
     // expect(sol.corners.length).toEqual(8)
@@ -538,14 +540,16 @@ describe( 'Solid test', () => {
       [0, 1, 0, 0],
       [0, 0, -1, 0],
       [0, 0, 1, 0],
-      [0, 0, 0, -1],
+      [0, 0, 0., -1],
       [0, 0, 0, 1]
     ]
     let sol = Solid.createSolidFromVertices( octahedra )
-    console.log( sol.exportToJSON() )
+   // console.log(JSON.stringify(sol.faces.map(f => f.equ)))
+    // console.log( sol.exportToJSON() )
 
-    console.table( sol.corners )
+   // console.table( sol.corners )
     sol.ensureSilhouettes()
+    expect( sol.silhouettes[0].length ).toEqual( 26 )
 
     const HS = [
       [1, 1, 1, 1, 1],
@@ -576,7 +580,9 @@ describe( 'Solid test', () => {
     //   const s0 = sol.project(0)
     // console.log(s0)
     //expect(sol.corners.length).toEqual(8)
-    expect( 8 ).toEqual( 8 )
+    // const pro = ss4d.project(0)
+  //   console.log(JSON.stringify(ss4d.project(0)))
+    expect( ss4d.silhouettes[0].length ).toEqual( 26 )
   } )
 
 } )

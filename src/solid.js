@@ -40,7 +40,8 @@ class Solid extends NDObject {
     this.silhouettes = []
     this.adjacenciesValid = false
     this.cornersValid = false
-    // this.tempAdja = new Set()
+    this.center = []
+    this.adjacentRefs = new Set()
     // TODO: verifi à quoi ça sert
     if (halfspaces) {
       const _t = this
@@ -60,6 +61,7 @@ class Solid extends NDObject {
         }
       }
   */    
+ // TODO: remplacer par un map normal
       halffiltered.forEach(HS => _t.suffixFace(new Face(HS)))
       this.ensureFaces()
       // const th = this
@@ -175,6 +177,7 @@ class Solid extends NDObject {
    */
   eraseCorners () {
     this.corners.length = 0
+    this.center.length = 0
     this.cornersValid = false
     this.faces.forEach(face => { face.touchingCorners.length = 0 })
   }
@@ -185,7 +188,7 @@ class Solid extends NDObject {
   eraseOldAdjacencies () {
     // this.eraseCorners()
     this.faces.forEach(face => {
-      face.tempAdja.clear()
+      face.adjacentRefs.clear()
       face.eraseTouchingCorners()
       face.eraseAdjacentFaces()
     })
@@ -307,11 +310,14 @@ class Solid extends NDObject {
       // console.error('pt')
       return false
     }
+    //TODO: !!!!!!
     const str = JSON.stringify(corner)
     if (this.corners.find(el => str === JSON.stringify(el))) {
       // console.error('déjà présent', str)
-      return false
+    return false
     }
+    // TODO: si un même sommet est obtenu de différentes façons, est-ce normal ?
+    // oui, si c'est un sous-ensemble. non si les ensembles sont disjoints
     this.suffixCorner(corner)
     return true
   }
@@ -323,7 +329,7 @@ class Solid extends NDObject {
    */
   processCorner (facesref, corner) {
     if (this.isCornerAdded(corner)) {
-      // this.tempAdja.add(facesref)
+      // this.adjacentRefs.add(facesref)
       Face.updateAdjacentFacesRefs(this.faces, facesref, corner)
     } else {
       //
@@ -339,7 +345,7 @@ class Solid extends NDObject {
     // recherche d'une intersection
     // TODO: mettre ce controle dans ref intersection
     const intersection = Face.facesRefIntersection(this.faces, facesref)
-    // TODO: pourquoi l'intersection pourrait ne pas être sur les faces ?
+    // TODO: pourquoi l'intersection pourrait ne pas être sur les faces ? mais en fait si !!!
     if (intersection && facesref.every(ref => this.faces[ref].isPointOnFace(intersection))) {
       this.processCorner(facesref, intersection)
     }
@@ -349,26 +355,31 @@ class Solid extends NDObject {
    *
    */
   computeAdjacencies () {
-    const groupsFaces = moizeAmongIndex(this.faces.length, this.dimension, P.MAX_FACE_PER_CORNER)
+    const groupsFaces = moizeAmongIndex(this.faces.length, this.dimension, P.MAX_FACE_PER_CORNER)  // this.dimension) //
     const n = groupsFaces.length
     for (let index = 0; index < n; index++) {
       this.computeIntersection(groupsFaces[index])
     }
-    const _t = this
-    this.faces.forEach(face => {
-      face.tempAdja.forEach(x => face.adjacentFaces.push(_t.faces[x]))
-    })
+   // const _t = this
+   // this.faces.forEach(face => {
+   //  face.adjacentRefs.forEach(x => face.adjacentFaces.push(_t.faces[x]))
+  // })
   }
 
   computeCorners () {
     const _t = this
     this.faces.forEach(face => {
-      const nbAjaFaces = face.adjacentFaces.length
+      const nbAjaFaces = face.adjacentRefs.size
       const groupsRefFaces = moizeAmongIndex(nbAjaFaces, _t.dimension-1, P.MAX_FACE_PER_CORNER)   
       const n = groupsRefFaces.length
+      const adjacentEqu = []
+      face.adjacentRefs.forEach(element => {
+        adjacentEqu.push(this.faces[element].equ)
+      })
+      // console.error('Equ', adjacentEqu)
       // console.log('compute corners face ', idf, nbAjaFaces, n, groupsRefFaces)
       for (let index = 0; index < n; index++) {
-        const intersection = intersectHyperplanes([ face.equ ].concat(groupsRefFaces[index].map(id => face.adjacentFaces[id].equ))) 
+        const intersection = intersectHyperplanes([ face.equ ].concat(groupsRefFaces[index].map(id => adjacentEqu[id])))
         // console.log('intsr', intersection)
         // const intersection = Face.facesRefIntersection(_t.faces, groupsRefFaces[index])
         // intersectHyperplanes(hyps)
@@ -383,7 +394,7 @@ class Solid extends NDObject {
     let cornerList = []
     // TODO, voir pour remplacer uniq par la fonction infra
     this.faces.forEach(face => {
-      uniqBy(face.touchingCorners, JSON.stringify)
+     uniqBy(face.touchingCorners, JSON.stringify)
       cornerList = cornerList.concat(face.touchingCorners)
     })
     _t.corners.length = 0
@@ -410,9 +421,14 @@ class Solid extends NDObject {
   findAdjacencies () {
     this.eraseOldAdjacencies()
     this.computeAdjacencies()
-    // console.table(this.tempAdja)
+    // console.table(this.adjacentRefs)
     // Face.updateAdjacentFacesRefs(this.faces, facesref, corner)
+    const nba = this.faces.length
     this.filterRealFaces()
+    if (this.faces.length !== nba) {
+      this.eraseOldAdjacencies()
+      this.computeAdjacencies()
+    }
     this.adjacenciesValid = true
     this.cornersValid = true
   }
@@ -421,11 +437,13 @@ class Solid extends NDObject {
    * TODO: À rédiger !!!
    */
   findCorners () {
-    // console.log('findCorners pas rédigé')
     // this.computeAdjacencies()
     // this.filterRealFaces()
     this.eraseCorners()
     this.computeCorners()
+    for (let index = 0; index < this.dimension; index++) {
+      this.center[index] = this.corners.map(c => c[index]).reduce((a, b) => (a + b), []) / this.dimension
+    }
     this.cornersValid = true
   }
 
@@ -434,10 +452,8 @@ class Solid extends NDObject {
    */
   ensureFaces () {
     if (!this.adjacenciesValid) {
-      // console.log('recalc adja')
       this.findAdjacencies()
     } else if (!this.cornersValid) {
-      // console.log('recalc corners')
       this.findCorners()
     } else {
       //
@@ -450,7 +466,6 @@ class Solid extends NDObject {
   ensureSilhouettes () {
     if (this.silhouettes.length === 0) {
       for (let i = 0; i < this.dimension; i++) {
-        // console.log('ensure sil ', i)
         this.silhouettes[i] = this.createSilhouette(i)
       }
     }
@@ -470,20 +485,41 @@ class Solid extends NDObject {
     const n = sFaces.length
     for (let index = 0; index < n; index++) {
     // for (const face of sFaces) {
-      const tmp = sFaces[index].silhouette(axe)
+      const tmp = sFaces[index].silhouette(axe, sFaces, this.center)
       // console.log('------')
       if (tmp) {
         sil = [...sil, ...tmp]
       }
     }
-    // 
-    const seen = {}
-    sil = sil.filter(function(item) {
-          var k = JSON.stringify(item.equ) 
-          return seen.hasOwnProperty(k) ? false : (seen[k] = true)
-      })
-   // console.log('sil',axe, ' ', sil.map(face => face.equ ))
-    return sil
+    //
+    // console.error('sil !')
+    // console.table(sil.map(f => f.equ))
+    const nb = sil.length
+    // const seen = {}
+    // sil = sil.filter(function(item) {
+    //       var k = JSON.stringify(item.equ)
+    //       return seen.hasOwnProperty(k) ? false : (seen[k] = true)
+    //   })
+
+    const filteredSil = []
+    // t.corners.length = 0
+    sil.forEach((face, idx) => {
+      let res = true
+      for (let index = idx + 1; index < nb; index++) {
+        if (isCornerEqual(face.equ, sil[index].equ, P.VERY_SMALL_DIST)) {
+        // if (JSON.stringify(face.equ) === JSON.stringify(sil[index].equ)) {
+          res = false
+          break
+        }
+      }
+      if (res) filteredSil.push(face)
+    })
+
+    // console.error('sil !', nb, sil.length)
+   // console.table(filteredSil.map(f => f.equ))
+   // console.log('sil', axe, ' ', filteredSil.map(face => face.equ))
+   //  console.error(filteredSil.length)
+    return filteredSil
   }
 
   /**
@@ -554,7 +590,8 @@ class Solid extends NDObject {
       console.log('not real face')
       return []
     }
-    const sil = projFace.forceSilhouette(2)
+    // TODO: this.center pas défini !!!
+    const sil = projFace.forceSilhouette(2, this.faces, this.center)
     // TODO: verif
     let halfspaces = [...sil].map(face => Solid.silProject(face, 2))
     halfspaces = uniqBy(halfspaces, JSON.stringify)
