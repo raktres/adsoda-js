@@ -54,12 +54,10 @@ class Space {
   static importFromJSON (json) {
     const space = new Space(parseInt(json.dimension), json.spacename)
     ;[...json.solids].forEach(solid => {
-      // console.log('solid', solid)
       space.suffixSolid(Solid.importFromJSON(solid))
     })
     if (json.groups) {
       ;[...json.groups].forEach(group => {
-      // console.log('import group', group)
         space.suffixGroup(Group.importFromJSON(group, space))
       })
     }
