@@ -51,7 +51,6 @@
     "eslint-plugin-promise": "^4.2.1",
     "jest": "^23.6.0",
     "jsdoc": "^3.6.6",
-    "mathjs": "^9.2.0",
     "moize": "^6.0.0",
     "nyc": "^13.3.0",
     "regenerator-runtime": "^0.13.7",

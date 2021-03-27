@@ -79,4 +79,5 @@ describe('Face test', () => {
     const ord = face.orderedCorners()
     const fc = 0
   })
+  
 })

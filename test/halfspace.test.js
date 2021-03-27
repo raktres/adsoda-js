@@ -1,4 +1,4 @@
-import { multiply, transpose, lusolve } from 'mathjs'
+
 /* globals describe, expect, beforeEach, test */
 // const translate = require('./halfspace.js');
 
@@ -210,12 +210,19 @@ describe( 'Tests of halfspace', () => {
 
   } )
 
+  test( 'solution e17', () => {
+  const grp =  [    
+    [      0,      0,      6.123233995736766e-17,      1,      1    ],    
+    [      0,      0,      -1,      6.123233995736766e-17,      1    ],
+    [      -1,      0,      0,      0,      1    ],    
+    [      0,      1,      0,      0,      1    ],    
+
+  ]
+  const res = solution(grp)
+
+  })
+
   test( 'from corner to faces', () => {
-
-
-
-
-
 
 
     const tetrahedra =     [[-0.949, -1.225, 0, 0],

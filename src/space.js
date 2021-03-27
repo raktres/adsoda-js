@@ -6,6 +6,7 @@
 
 import { Solid } from './solid.js'
 import { Face } from './face.js'
+import { Group } from './group.js'
 
 class Space {
   /**
@@ -15,12 +16,20 @@ class Space {
   constructor (dim, space) {
     // super("space")
     this.name = space || 'space'
+    this.idx = 0
     this.dimension = dim
-    this.solids = new Set()
+    this.solids = new Map()
     // this.ambientColor = false
     // this.lights = []
+    this.groups = new Map()
     this.projection = []
     this.removeHidden = false
+  }
+
+  newOjectId () {
+    const id = 'object' + this.idx
+    this.idx += 1
+    return id
   }
 
   /**
@@ -28,7 +37,11 @@ class Space {
    */
   exportToJSON () {
     let json = `{ "spacename" : "${this.name}" , "dimension" : ${this.dimension} ,  "solids" : [ `
-    json += [...this.solids].map(solid => solid.exportToJSON()).join(',')
+    this.solids.forEach(solid => {
+      json += solid.exportToJSON() + ',' // ).join(',')
+    })
+    json += '], "groups" : ['
+    // json += [...this.groups].map(group => group.exportToJSON()).join(',')
     json += ']} '
     return json
   }
@@ -41,8 +54,17 @@ class Space {
   static importFromJSON (json) {
     const space = new Space(parseInt(json.dimension), json.spacename)
     ;[...json.solids].forEach(solid => {
+      // console.log('solid', solid)
       space.suffixSolid(Solid.importFromJSON(solid))
     })
+    if (json.groups) {
+      ;[...json.groups].forEach(group => {
+      // console.log('import group', group)
+        space.suffixGroup(Group.importFromJSON(group, space))
+      })
+    }
+    // space.groups
+    // TODO: ajouter groups
     return space
   }
 
@@ -52,8 +74,20 @@ class Space {
    *
    * @param {*} solid
    */
+  suffixGroup (grp) {
+    const id = grp.id === 0 ? this.newOjectId() : grp.id
+    // console.log("suffix group ", grp.id)
+    // console.log("solid id", id)
+    this.groups.set(id, grp)
+  }
+
+  /**
+   *
+   * @param {*} solid
+   */
   suffixSolid (solid) {
-    this.solids.add(solid)
+    const id = solid.id === 0 ? this.newOjectId() : solid.id
+    this.solids.set(id, solid)
   }
 
   /**
@@ -66,9 +100,17 @@ class Space {
    *
    */
   clearSolids () {
-    this.solids.clear()
+    this.solids.clear() // clear()
   }
 
+  /**
+   * TODO:
+   */
+  /*
+  clearGroups () {
+    this.Groups.length = 0 // clear()
+  }
+*/
   /**
    * @todo confirmer que affectation pas utile
    */
@@ -78,14 +120,15 @@ class Space {
       solid.ensureSilhouettes()
     })
   }
-
   /**
    *
    */
+  /*
   eliminateEmptySolids () {
     const solids = [...this.solids].filter(solid => solid.isNonEmptySolid())
     this.solids = solids
   }
+  */
 
   /**
    *
@@ -93,10 +136,16 @@ class Space {
    * @param {*} force
    */
   transform (matrix, force = false) {
-    [...this.solids].forEach(solid => {
-      const center = solid.middleOf()
-      solid.transform(matrix, center, force)
-    })
+    if (this.groups.size === 0) {
+      this.solids.forEach(solid => {
+        const center = solid.middleOf()
+        solid.transform(matrix, center, force)
+      })
+    } else {
+      this.groups.forEach(group =>
+        group.transform(matrix)
+      )
+    }
   }
 
   /**
@@ -105,7 +154,15 @@ class Space {
    * @param {*} force
    */
   translate (vector, force = false) {
-    [...this.solids].forEach(solid => solid.translate(vector, force))
+    if (this.groups.size === 0) {
+      this.solids.forEach(solid => {
+        solid.translate(vector, force)
+      })
+    } else {
+      this.groups.forEach(group => {
+        group.translate(vector)
+      })
+    }
   }
 
   /**
@@ -125,7 +182,6 @@ class Space {
           listOfSolids[i] = tempList
         }
       }
-      // listOfSolids = listOfSolids.map(solsOfList=>this.solids[ind].solidsSilhouetteSubtract(solsOfList,axe,ind))
     }
     const flatList = listOfSolids
       .reduce((flatList, item) => flatList.concat(item), [])
@@ -155,12 +211,12 @@ class Space {
    * @returns array of solids
    */
   projectSolids (axe) {
-    const filteredSolids = this.removeHidden
-      ? this.removeHiddenSolids(axe)
-      : [...this.solids]
-    const solids = filteredSolids
-      .map(solid => solid.project(axe))
-      .reduce((solflat, item) => solflat.concat(item), [])
+    // const filteredSolids = this.removeHidden
+    //  ? this.removeHiddenSolids(axe)
+    //  : [...this.solids]
+    const projs = []
+    this.solids.forEach((val, key) => projs.push(val.project(axe)))
+    const solids = projs.reduce((solflat, item) => solflat.concat(item), [])
       .filter(solid => solid.isNonEmptySolid())
     return solids
   }
@@ -170,11 +226,8 @@ class Space {
    * @param {*} hyperplane
    */
   sliceProjectSolids (hyperplane) {
-    // const filteredSolids = [...this.solids]
-    const solids = [...this.solids]
-      .map(solid => solid.sliceProject(hyperplane))
-      .reduce((solflat, item) => solflat.concat(item), [])
-    // .filter(solid => solid.isNonEmptySolid())
+    const projs = this.solids.forEach((val, key) => val.sliceProject(hyperplane))
+    const solids = projs.reduce((solflat, item) => solflat.concat(item), [])
     return solids
   }
 
@@ -189,7 +242,7 @@ class Space {
     space.name = this.projectName(axe)
     // TODO il faut que project solids utilise filteredSolids
     const solidarray = this.projectSolids(axe)
-    solidarray.forEach(solid => space.solids.add(solid))
+    solidarray.forEach(solid => space.suffixSolid(solid))
     return space
   }
 

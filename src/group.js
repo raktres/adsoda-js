@@ -10,7 +10,8 @@ import { NDObject } from './ndobject.js'
 class Group extends NDObject {
   constructor ( objects ) {
     super('Group')
-    this.objectList = []
+    this.space =  ''
+    this.objectList = new Set()
     if (objects) this.objectList = objects
   }
 
@@ -25,8 +26,12 @@ class Group extends NDObject {
    *
    * @param {*} json
    */
-  static importFromJSON (json) {
-    return new Group(json.group)
+  static importFromJSON (json, space) {
+    const grp = new Group()
+    grp.id = json.id || 0
+    json.refs.forEach(sol => grp.objectList.add(sol))
+    grp.space = space
+    return grp
   }
 
   /**
@@ -55,7 +60,10 @@ class Group extends NDObject {
    */
   translate (vector) {
     // TODO: add selected control
-    this.objectList.forEach(obj => obj.translate(vector))
+    this.objectList.forEach(idx => {
+      const object = this.space.solids.get(idx)
+      object.translate(vector)
+    })
     return this
   }
 
@@ -66,8 +74,40 @@ class Group extends NDObject {
    * @returns face this
    */
   transform (matrix) {
+    const center = this.middleOf()
     // TODO: attention au centre de rotatation de chaque objet
+    this.objectList.forEach(idx => {
+      const object = this.space.solids.get(idx)
+      object.transform(matrix, center)
+    })
     return this
+  }
+
+    /**
+   * @todo write
+   */
+  middleOf () {
+    // for (let index = 0; index < this.space.dimension; index++) {
+    //  this space.dimensiont = array[index]; 
+    // }
+    const dim = this.space.dimension
+    const minCorner = []
+    const maxCorner = []
+    this.objectList.forEach(idx => {
+      const object = this.space.solids.get(idx)
+      object.corners.forEach(corner => {
+        for (let i = 0; i < dim; i++) {
+          minCorner[i] = Math.min(corner[i], minCorner[i] || corner[i])
+          maxCorner[i] = Math.max(corner[i], maxCorner[i] || corner[i])
+        }
+        // object.translate(vector)
+      })
+    })
+    const corners = []
+    for (let i = 0; i < dim; i++) {
+      corners[i] = (maxCorner[i] + minCorner[i]) / 2
+    }
+    return corners
   }
 
   /**

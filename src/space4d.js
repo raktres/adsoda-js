@@ -32,7 +32,7 @@ export function cube3D (min, max) {
 
  * */
 export function cube4D (min, max) {
-  return new Solid(3, [
+  return new Solid(4, [
     [-1, 0, 0, 0, max],
     [1, 0, 0, 0, -min],
     [0, -1, 0, 0, max],

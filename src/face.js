@@ -16,28 +16,52 @@ import {
 } from './halfspace.js'
 import { NDObject } from './ndobject.js'
 import * as P from './parameters'
-import { multiply, subtract, norm as matnorm, unaryMinus, dot as matdot, cross } from 'mathjs'
-/*
-const core = require('mathjs')
-const math = core.create()
 
-math.import(require('mathjs/lib/cjs/type/matrix/Matrix'))
-math.import(require('mathjs/lib/cjs/function/arithmetic/multiply'))
-math.import(require('mathjs/lib/cjs/function/arithmetic/subtract'))
-math.import(require('mathjs/lib/cjs/function/arithmetic/norm'))
-math.import(require('mathjs/lib/cjs/function/arithmetic/unaryMinus'))
-math.import(require('mathjs/lib/cjs/function/matrix/transpose'))
-math.import(require('mathjs/lib/cjs/function/matrix/dot'))
-math.import(require('mathjs/lib/cjs/function/matrix/cross'))
-*/
-/*
-const replacer = function (key, value) {
-  if (Array.isArray(value)) {
-    return JSON.stringify(value)
+function multiplyMatrices (m1, m2) {
+  const result = []
+  for (let i = 0; i < m2.length; i++) {
+    let res = 0
+    for (let j = 0; j < m1[0].length; j++) {
+      res += m2[j] * m1[i][j]
+    }
+    result.push(res)
   }
-  return value
+  return result
 }
-*/
+
+function subtract (a, b) {
+  const res = []
+  for (let j = 0; j < a.length; j++) {
+    res.push(a[j] - b[j])
+  }
+  return res
+}
+
+function matnorm (a) {
+  let res = 0
+  for (let j = 0; j < a.length; j++) {
+    res += a[j] * a[j]
+  }
+  return Math.sqrt(res)
+}
+
+function matdot (vector1, vector2) {
+  let result = 0
+  for (let i = 0; i < vector1.length; i++) {
+    result += vector1[i] * vector2[i]
+  }
+  return result
+}
+
+function cross3d (x, y) {
+  const [x1, x2, x3] = Array.from(x)
+  const [y1, y2, y3] = Array.from(y)
+  return [
+    x2 * y3 - x3 * y2,
+    x3 * y1 - x1 * y3,
+    x1 * y2 - x2 * y1
+  ]
+}
 
 class Face extends NDObject {
   /**
@@ -51,7 +75,6 @@ class Face extends NDObject {
     this.solid = ''
     this.equ = vector.map(parseFloat)
     this.touchingCorners = []
-    // this.adjacentFaces = []
     this.adjacentRefs = new Set()
     this.dim = this.equ.length - 1
   }
@@ -94,7 +117,6 @@ class Face extends NDObject {
    */
   eraseAdjacentFaces () {
     this.adjacentRefs.clear()
-    // this.adjacentFaces.length = 0
   }
 
   /**
@@ -123,11 +145,8 @@ class Face extends NDObject {
     //  since translating should not change the normal vector (the first n-1 terms).
     //
 
-    // TODO: remplacer matdot
-    // console.log('face trans av ', this.equ )
     const dot = matdot(this.equ.slice(0, -1), vector)
     this.equ = constantAdd(this.equ, dot)
-    // console.log('face trans ap ', this.equ )
     return this
   }
 
@@ -154,7 +173,9 @@ class Face extends NDObject {
     // TODO vérifier si utilisaton not small_value x!=0
     const intercept =
       -getConstant(this.equ) / getCoordinate(this.equ, coordindex)
-    const coords = multiply(matrix, this.equ.slice(0, -1))
+
+    const coords = multiplyMatrices(matrix, this.equ.slice(0, -1))
+
     //
     //  At this point we have found a point on the halfspace.  This point is
     //  (0, 0, ..., intercept, ..., 0, 0), where intercept is the ith coordinate
@@ -172,7 +193,7 @@ class Face extends NDObject {
     for (let i = 0; i < n; i++) {
       sum += matrix[i][coordindex] * intercept * coords[i]
     }
-    // TODO: remplacer par push(sum) ?
+
     this.equ = [...coords, -sum]
     return this
   }
@@ -183,7 +204,6 @@ class Face extends NDObject {
    * @returns boolean if it is a backface
    */
   isBackFace (axe) {
-    // return this.orientation(axe) <= 0
     return this.orientation(axe) < P.VERY_SMALL_NUM
   }
 
@@ -197,7 +217,6 @@ class Face extends NDObject {
     if (val < -P.VERY_SMALL_NUM) return -1
     if (val > P.VERY_SMALL_NUM) return 1
     return 0
-    //    return Math.sign(this.equ[axe])
   }
 
   /**
@@ -238,27 +257,6 @@ class Face extends NDObject {
   }
 
   /**
-   *
-   * @param {*} face
-   * @todo vérifier que face n'est pas déja dans la liste
-   * modif : ne pas ajouter une face si elle existe déjà dans la liste
-   * TODO: mettre des références facile
-   */
-  /*
-  suffixAdjacentFaces (face) {
-    const faceEqu = JSON.stringify(face.equ)
-    // console.log(faceEqu)
-    if (this.adjacentFaces.find(aface => { 
-      // console.log(JSON.stringify(aface.equ),faceEqu)
-      return JSON.stringify(aface.equ) === faceEqu
-       })) return false
-    // console.log('add', face.equ)
-    if (this !== face) {
-      this.adjacentFaces = [...this.adjacentFaces, face]
-    }
-  }
-*/
-  /**
    * @returns boolean true if it is a real face ie number of corners > dimension
    */
   isRealFace () {
@@ -295,7 +293,6 @@ class Face extends NDObject {
     * @returns boolean true if point is inside halfspace
 
      */
-
   isPointInsideFace (point) {
     //
     //  The point is on the inside side of the halfspace if
@@ -312,8 +309,9 @@ class Face extends NDObject {
 
   isPointOnFace (point) {
     const pos = positionPoint(this.equ, point)
-    return  pos > -P.VERY_SMALL_NUM && pos < P.VERY_SMALL_NUM
+    return pos > -P.VERY_SMALL_NUM && pos < P.VERY_SMALL_NUM
   }
+
   /**
    *
    * @param {*} axe
@@ -345,7 +343,7 @@ class Face extends NDObject {
     let diffEqProj = projectVector(diffEq, axe)
 
     if (positionPoint(diffEqProj, outPointProj) > P.VERY_SMALL_NUM) {
-      diffEqProj = unaryMinus(diffEqProj)
+      diffEqProj = diffEqProj.map(x => -x)
     }
 
     const nFace = new Face(diffEqProj)
@@ -364,10 +362,8 @@ class Face extends NDObject {
     const face = this // cloneDeep(this);
     let faces = []
     this.tempAdja.forEach(element => {
-      
     })
-    const faces = 
-    
+    const faces =
     [...face.adjacentFaces].map[
       _face => _face.intersectionIntoFace() // pas bon, manque tface
     ].filter(fac => fac)
@@ -396,14 +392,14 @@ class Face extends NDObject {
     // for exemple, a touching corner of the adjacent face
     // not common with main face
     // const outPoint = aTC[0];
-    const outPoint = aTC.find(point => !tTC.find(pt => isCornerEqual(pt,point)))
+    const outPoint = aTC.find(point => !tTC.find(pt => isCornerEqual(pt, point)))
     if (!outPoint) return false
     // use center !!
 
     const nFace = new Face(diffEq)
     // flip the face if point is not inside
-    //if (!nFace.isPointInsideFace(center)) {
-      if (!nFace.isPointInsideFace(outPoint)) {
+    // if (!nFace.isPointInsideFace(center)) {
+    if (!nFace.isPointInsideFace(outPoint)) {
       nFace.flip()
     }
 
@@ -421,7 +417,6 @@ class Face extends NDObject {
    */
   silhouette (axe, faces, center) {
     if (this.isBackFace(axe)) {
-     // console.log('back face', this.equ)
       return false
     }
     const newFace = new Face(this.equ)
@@ -451,14 +446,12 @@ class Face extends NDObject {
 
     const newFace = new Face(this.equ)
     newFace.touchingCorners = [...this.touchingCorners]
-    // const adjaFaces = []
+    const adjaFaces = []
     // [...this.adjacentFaces]
     this.adjacentRefs.forEach(element => {
       adjaFaces.push(faces[element])
     })
     const silFaces = []
-    // const n = adjaFaces.length
-    // for (const aFace of adjaFaces)
     adjaFaces.forEach(aFace => {
       const nface = newFace.intersectionIntoSilhouetteFace(aFace, axe, center)
       if (nface) {
@@ -531,17 +524,11 @@ class Face extends NDObject {
   static updateAdjacentFacesRefs (faces, refs, corner) {
     // TODO: pas au bon endroit
     refs.forEach(ref => faces[ref].suffixTouchingCorners(corner))
-
-   //  const grouprefs = JSON.parse(moizeAmongIndex(refs.length, 2, 2))
-   const grouprefs = moizeAmongIndex(refs.length, 2, 2)
+    const grouprefs = moizeAmongIndex(refs.length, 2, 2)
     grouprefs.forEach(groupref => {
       faces[refs[groupref[0]]].adjacentRefs.add(refs[groupref[1]])
       faces[refs[groupref[1]]].adjacentRefs.add(refs[groupref[0]])
-
-      // faces[refs[groupref[0]]].suffixAdjacentFaces(faces[refs[groupref[1]]])
-      // faces[refs[groupref[1]]].suffixAdjacentFaces(faces[refs[groupref[0]]])
     })
-    // intersectHyperplanes
   }
 }
 
@@ -555,7 +542,7 @@ class Face extends NDObject {
  */
 function order3D (point1, halfspace, pointref, vectorref) {
   const v1 = subtract(point1, pointref)
-  const crossP = cross(vectorref, v1)
+  const crossP = cross3d(vectorref, v1)
   const norm = matnorm(crossP)
   const dotP = matdot(vectorref, v1)
   const theta = Math.atan2(norm, dotP)
