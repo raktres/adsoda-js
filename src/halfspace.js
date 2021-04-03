@@ -28,6 +28,16 @@ function matdot (vector1, vector2) {
   return result
 }
 
+export function normalize (vect) {
+  const normVect = vect.slice(0, vect.length - 1)
+  // console.log('hp',vect, 'normal vect', normVect)
+  const length = Math.sqrt(normVect.reduce((acc, cur) => acc + cur * cur, 0))
+  const res = vect.map(x => x / length)
+  // console.log('hp',vect, 'normal vect', normVect, 'norm',length, 'result normalisé', res)
+  // console.error(vect,res)
+  return res
+}
+
 /**
  *
  * @param {*} matrix
@@ -216,6 +226,18 @@ export function isCornerEqual (corner1, corner2, diff = P.VERY_SMALL_NUM) {
   } else {
     return Math.abs(corner1 - corner2) < P.VERY_SMALL_NUM
   }
+}
+
+export function isHPEqual (hp1, hp2, diff = P.VERY_SMALL_NUM) {
+  // if (corner1 instanceof Array && corner2 instanceof Array) {
+  const hpn1 = normalize(hp1)
+  const hpn2 = normalize(hp2)
+  for (let i = 0; i < hpn1.length; i++) {
+    if (Math.abs(hpn1[i] - hpn2[i]) > diff) {
+      return false
+    }
+  }
+  return true
 }
 /**
  * TODO: pas utile

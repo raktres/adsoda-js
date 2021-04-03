@@ -456,6 +456,7 @@ describe( 'Solid test', () => {
     // expect(sol.corners.length).toEqual(6)
     // let nb_adja = sol.faces.map(f => f.adjacentRefs.size)
     const pr0 = sol.project( 0 )
+    console.error( '2D proj', sol.project( 0 )[0].corners )
     expect( sol.project( 0 )[0].corners[0] ).toEqual( [1] )
     expect( sol.project( 0 )[0].corners[1] ).toEqual( [5] )
     expect( sol.project( 1 )[0].corners[0] ).toEqual( [5] )
@@ -474,6 +475,23 @@ describe( 'Solid test', () => {
     expect( sol.project( 2 )[0].corners.length ).toEqual( 4 )
 
     // expect(sol.corners.length).toEqual(8)
+  } )
+
+  test( '3D test cut', () => {
+    let points = [[1, 1, 1], [-1, 1, 1], [-1, -1, 1], [1, -1, 1], [1, 1, -1], [-1, 1, -1], [-1, -1, -1], [1, -1, -1]]
+    let sol = Solid.createSolidFromVertices( points )
+    // console.log(sol.exportToJSON)
+
+    // expect(8).toEqual(8)
+    // const pr0 = 
+    const soli = sol.axeCut( 0 )
+    /*
+    expect( sol.axeCut( 0 )[0].corners.length ).toEqual( 4 )
+    expect( sol.axeCut( 1 )[0].corners.length ).toEqual( 4 )
+    expect( sol.axeCut( 2 )[0].corners.length ).toEqual( 4 )
+    */
+
+    expect(soli[0].corners.length).toEqual(4)
   } )
 
   test( '3D test proj', () => {
@@ -639,6 +657,80 @@ describe( 'Solid test', () => {
       }
   ]
   */
+
+ test( 'test pb proj en Y', () => {
+const hs = 
+ [
+  [
+    0.8660254037844387,
+    0,
+    0.49999999999999994,
+    0,
+    0.04509618943233412
+  ],
+  [
+    -0.8660254037844387,
+    0,
+    -0.49999999999999994,
+    0,
+    0.45490381056766555
+  ],
+  [
+    0,
+    1,
+    0,
+    0,
+    0.09999999999999987
+  ],
+  [
+    0,
+    -1,
+    0,
+    0,
+    0.3999999999999998
+  ],
+  [
+    -0.4330127018922193,
+    0,
+    0.7500000000000001,
+    0.49999999999999994,
+    0.17745190528383276
+  ],
+  [
+    0.4330127018922193,
+    0,
+    -0.7500000000000001,
+    -0.49999999999999994,
+    0.32254809471616686
+  ],
+  [
+    0.24999999999999994,
+    0,
+    -0.4330127018922193,
+    0.8660254037844387,
+    0.23415063509461082
+  ],
+  [
+    -0.24999999999999994,
+    0,
+    0.4330127018922193,
+    -0.8660254037844387,
+    0.26584936490538885
+  ]
+]
+let sol = new Solid(4, hs)
+// sol.ensureSilhouettes()
+sol.createSilhouette(1)
+/* [
+  0,
+  1,
+  0,
+  0,
+  0.09999999999999987,
+]*/
+
+ }),
+
   test( 'test 4D', () => {
     const octahedra = [
       [-1, 0, 0, 0],

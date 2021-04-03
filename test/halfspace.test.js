@@ -3,7 +3,6 @@
 // const translate = require('./halfspace.js');
 
 import {
-  translateHS,
   positionPoint,
   projectVector,
   intersectHyperplanes,
@@ -11,15 +10,14 @@ import {
   nonZeroRows,
   getConstant,
   getCoordinate,
-  among,
   amongIndex,
   moizeAmongIndex,
   solution,
   constantAdd,
   isCornerEqual,
   vectorFromPoints,
-  vectorsFromPoints,
-  findnormal
+  findnormal,
+  normalize
 } from '../src/halfspace.js'
 import * as P from '../src/parameters.js'
 
@@ -78,6 +76,18 @@ describe( 'Tests of halfspace', () => {
     const c = [1, 2, 3, 4]
     const d = getCoordinate( c, 2 )
     expect( d ).toEqual( 3 )
+  } )
+
+  test( 'normalize ', () => {
+    const c = normalize([1, 0, 0, 1])
+    const d = getCoordinate( c, 3 )
+    expect( d ).toEqual( 1 )
+    const e = normalize([2, 0, 0, 1])
+    const f = getCoordinate( e, 0 )
+    expect( f ).toEqual( 1 )
+    const g = getCoordinate( e, 3 )
+
+    expect( g ).toEqual( 0.5 )
   } )
 
   /* test("project false", () => {

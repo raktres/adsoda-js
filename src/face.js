@@ -12,7 +12,8 @@ import {
   isCornerEqual,
   getCoordinate,
   getConstant,
-  moizeAmongIndex
+  moizeAmongIndex,
+  normalize
 } from './halfspace.js'
 import { NDObject } from './ndobject.js'
 import * as P from './parameters'
@@ -72,7 +73,6 @@ class Face extends NDObject {
 
   constructor (vector) {
     super('Face')
-    this.solid = ''
     this.equ = vector.map(parseFloat)
     this.touchingCorners = []
     this.adjacentRefs = new Set()
@@ -384,15 +384,16 @@ class Face extends NDObject {
     const tEq = [...this.equ].map(x => x * aF)
 
     const diffEq = subtract(tEq, aEq)
-
+    // const diffEq = normalize(subtract(tEq, aEq))
     const aTC = [...adjaFace.touchingCorners]
-    const tTC = [...this.touchingCorners]
-
+    // const tTC = [...this.touchingCorners]
+    const _t = this
     // looking for a point in solid, but not on main face
     // for exemple, a touching corner of the adjacent face
     // not common with main face
     // const outPoint = aTC[0];
-    const outPoint = aTC.find(point => !tTC.find(pt => isCornerEqual(pt, point)))
+    // const outPoint = aTC.find(point => !tTC.find(pt => isCornerEqual(pt, point)))
+    const outPoint = aTC.find(point => !_t.isPointOnFace(point))
     if (!outPoint) return false
     // use center !!
 
@@ -409,6 +410,22 @@ class Face extends NDObject {
 
   /**
    *
+   * @param {*} adjaFace
+   * @param {*} axe
+   */
+  intersectionCutIntoSilhouetteFace (adjaFace, axe) {
+    const aF = adjaFace.pvFactor(axe)
+    const tF = this.pvFactor(axe)
+    const aEq = [...adjaFace.equ].map(x => x * tF)
+    const tEq = [...this.equ].map(x => x * aF)
+    const diffEq = normalize(subtract(aEq, tEq))
+    const nFace = new Face(diffEq)
+    nFace.name = `cut de ${this.equ} pour ${axe} = 0 `
+    return nFace
+  }
+
+  /**
+   *
    * @param {*} axe
    * @returns array array of faces
    * TODO: utliser liste de référence dansr adj faces
@@ -419,8 +436,10 @@ class Face extends NDObject {
     if (this.isBackFace(axe)) {
       return false
     }
+    // TODO: vérifier si newface utile et remplacer par _this
     const newFace = new Face(this.equ)
     newFace.touchingCorners = [...this.touchingCorners]
+    const _t = this
     const silFaces = []
     this.adjacentRefs.forEach(element => {
       // Just keep backface to get visible edge ;
@@ -430,6 +449,19 @@ class Face extends NDObject {
         if (nface) {
           silFaces.push(nface)
         }
+      }
+    })
+    return silFaces
+  }
+
+  cutSilhouette (axe, faces) {
+    const silFaces = []
+    const _t = this
+    this.adjacentRefs.forEach(element => {
+      // contrairement à une silhouette normale, on ne prend que la silhouette de la face
+      const nface = _t.intersectionCutIntoSilhouetteFace(faces[element], axe)
+      if (nface) {
+        silFaces.push(nface)
       }
     })
     return silFaces
@@ -547,7 +579,7 @@ function order3D (point1, halfspace, pointref, vectorref) {
   const dotP = matdot(vectorref, v1)
   const theta = Math.atan2(norm, dotP)
   const sign = matdot(crossP, halfspace)
-  if (sign < 0) {
+  if (sign < 0) { // TODO: very small ou 0 ?
     return -theta
   } else {
     return theta

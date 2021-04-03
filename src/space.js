@@ -133,16 +133,17 @@ class Space {
    * @param {*} matrix
    * @param {*} force
    */
-  transform (matrix, force = false) {
+  transform (matrix, center = true, force = false) {
     if (this.groups.size === 0) {
       this.solids.forEach(solid => {
-        const center = solid.middleOf()
-        solid.transform(matrix, center, force)
+        const centerpt = center ? solid.middleOf() : [0, 0, 0, 0]
+        solid.transform(matrix, centerpt, force)
       })
     } else {
-      this.groups.forEach(group =>
-        group.transform(matrix)
-      )
+      this.groups.forEach(group => {
+        const centerptg = center ? group.middleOf() : [0, 0, 0, 0]
+        group.transform(matrix, centerptg, force)
+      })
     }
   }
 
@@ -197,6 +198,15 @@ class Space {
   }
 
   /**
+   * create the name of the projected space
+   * @param {*} axe
+   * @return text
+   */
+  axeCutName (axe) {
+    return `${this.name} cut axis ${axe}`
+  }
+
+  /**
    *
    * @param {*} axe
    * @returns array of lights
@@ -220,13 +230,34 @@ class Space {
   }
 
   /**
+   * project solids from space following axe
+   * @param {*} axe for the moment, just the index of axe
+   * @returns array of solids
+   */
+  axeCutSolids (axe) {
+    // const filteredSolids = this.removeHidden
+    //  ? this.removeHiddenSolids(axe)
+    //  : [...this.solids]
+    const cuts = []
+    this.solids.forEach((val, key) => cuts.push(val.axeCut(axe)))
+    const solids = cuts.reduce((solflat, item) => solflat.concat(item), [])
+      .filter(solid => solid.isNonEmptySolid())
+    return solids
+  }
+
+
+  /**
    *
    * @param {*} hyperplane
    */
   sliceProjectSolids (hyperplane) {
-    const projs = this.solids.forEach((val, key) => val.sliceProject(hyperplane))
-    const solids = projs.reduce((solflat, item) => solflat.concat(item), [])
-    return solids
+    const projs = []
+    this.solids.forEach((val, key) => {
+      const slice = val.sliceProject(hyperplane)
+      if (slice[0]) projs.push(slice[0])
+    })
+    // const solids = projs.reduce((solflat, item) => solflat.concat(item), [])
+    return projs
   }
 
   /**
@@ -246,6 +277,21 @@ class Space {
 
   /**
    * Project space following axe
+   * @param {*} axe for the moment, just the index of axe
+   * @returns space
+   */
+  axeCut (axe) {
+    // if (REMOVE_HIDDEN)
+    const space = new Space(this.dimension - 1)
+    space.name = this.axeCutName(axe)
+    // TODO il faut que project solids utilise filteredSolids
+    const solidarray = this.axeCutSolids(axe)
+    solidarray.forEach(solid => space.suffixSolid(solid))
+    return space
+  }
+
+  /**
+   * Project space following axe
    * @param {*} hyperplane for the moment, just the index of axe
    * @returns space
    */
@@ -255,7 +301,7 @@ class Space {
     space.name = this.projectName('slice'.hyperplane)
     // TODO il faut que project solids utilise filteredSolids
     const solidarray = this.sliceProjectSolids(hyperplane)
-    solidarray.forEach(solid => space.solids.add(solid))
+    solidarray.forEach(solid => space.suffixSolid(solid))
     return space
   }
 

@@ -13,7 +13,8 @@ import {
   moizeAmongIndex,
   findnormal,
   positionPoint,
-  intersectHyperplanes
+  intersectHyperplanes,
+  isHPEqual
 } from './halfspace.js'
 import * as P from './parameters.js'
 
@@ -114,7 +115,6 @@ class Solid extends NDObject {
    * @param {*} face
    */
   suffixFace (face) {
-    face.solid = this
     this.faces = [...this.faces, face]
   }
 
@@ -294,7 +294,7 @@ class Solid extends NDObject {
     // recherche d'une intersection
     const intersection = Face.facesRefIntersection(this.faces, facesref)
     // TODO: pourquoi l'intersection pourrait ne pas être sur les faces ? mais en fait si !!!
-    if (intersection && facesref.every(ref => this.faces[ref].isPointOnFace(intersection))) {
+    if (intersection) { // && facesref.every(ref => this.faces[ref].isPointOnFace(intersection))
       this.processCorner(facesref, intersection)
     }
   }
@@ -303,7 +303,7 @@ class Solid extends NDObject {
    *
    */
   computeAdjacencies () {
-    const groupsFaces = moizeAmongIndex(this.faces.length, this.dimension, P.MAX_FACE_PER_CORNER)  // this.dimension) //
+    const groupsFaces = moizeAmongIndex(this.faces.length, this.dimension, P.MAX_FACE_PER_CORNER) // this.dimension) //
     const n = groupsFaces.length
     for (let index = 0; index < n; index++) {
       this.computeIntersection(groupsFaces[index])
@@ -314,7 +314,7 @@ class Solid extends NDObject {
     const _t = this
     this.faces.forEach(face => {
       const nbAjaFaces = face.adjacentRefs.size
-      const groupsRefFaces = moizeAmongIndex(nbAjaFaces, _t.dimension - 1, _t.dimension - 1) // P.MAX_FACE_PER_CORNER) // _t.dimension-1)   
+      const groupsRefFaces = moizeAmongIndex(nbAjaFaces, _t.dimension - 1, _t.dimension - 1) // P.MAX_FACE_PER_CORNER) // _t.dimension-1)
       const n = groupsRefFaces.length
       const adjacentEqu = []
       face.adjacentRefs.forEach(element => {
@@ -334,9 +334,9 @@ class Solid extends NDObject {
       cornerList = cornerList.concat([...face.touchingCorners])
     })
     _t.corners.length = 0
-    cornerList.forEach((corner,idx) => { 
-      for (let index = idx+1 ; index < cornerList.length; index++) {
-        if (isCornerEqual(corner,cornerList[index])) { return false }
+    cornerList.forEach((corner, idx) => {
+      for (let index = idx + 1; index < cornerList.length; index++) {
+        if (isCornerEqual(corner, cornerList[index])) { return false }
       }
       _t.corners.push(corner)
     })
@@ -414,6 +414,54 @@ class Solid extends NDObject {
     sil.forEach((face, idx) => {
       let res = true
       for (let index = idx + 1; index < nb; index++) {
+        if (isHPEqual(face.equ, sil[index].equ, P.VERY_SMALL_NUM)) { // isCornerEqual
+          res = false
+          break
+        }
+      }
+      if (res) filteredSil.push(face)
+    })
+    return filteredSil
+  }
+
+  /**
+   *
+   * @param {*} axe
+   * @return {array} silhouettes
+   * TODO: correction, ne pas ajouter la silhouette si existe déjà
+   */
+
+  createAxeCutSilhouette (axe) {
+    const hype = []
+    for (let index = 0; index < this.dimension + 1; index++) {
+      hype[index] = 0
+    }
+    hype[axe] = 1
+
+    const solid1 = this.clone()
+    solid1.name = this.name + '/ cut /'
+    // attention ! le plan de coupe peut déjà être une face du solide
+    let cface = solid1.faces.find(face => {
+      return isHPEqual(hype, face.equ, 0) // || isHPEqual(hype, face.equ.map(x => -x), 0)
+    })
+    if (!cface) {
+      cface = new Face(hype)
+      cface.name = 'cut'
+      solid1.addFace(cface)
+      solid1.ensureFaces()
+    }
+
+    const sFaces = [...solid1.faces]
+
+    const sil = cface.cutSilhouette(axe, sFaces, this.center)
+    // TODO: reprendre
+  
+    const nb = sil.length
+    const filteredSil = []
+    // recherche de faces en doublon
+    sil.forEach((face, idx) => {
+      let res = true
+      for (let index = idx + 1; index < nb; index++) {
         if (isCornerEqual(face.equ, sil[index].equ, P.VERY_SMALL_DIST)) {
           res = false
           break
@@ -421,6 +469,8 @@ class Solid extends NDObject {
       }
       if (res) filteredSil.push(face)
     })
+    // TODO: voir si on retourne sil ou filteredSil
+    // return sil
     return filteredSil
   }
 
@@ -455,11 +505,45 @@ class Solid extends NDObject {
     const halfspaces = [..._t.silhouettes[axe]].map(face =>
       Solid.silProject(face, axe)
     )
+    // TODO: Voir s'il y a besoin de filtrer les HS, utilisr iSHSEquel
+    // trouver d'où peut provenir cette HS à 0. Apparait pour les cubes
+    // const halfspacesf = halfspaces.filter(eq => eq.find(x => { return x > P.VERY_SMALL_NUM || x < -P.VERY_SMALL_NUM }))
+  
     const dim = this.dimension - 1
     const solid = new Solid(dim, halfspaces)
     // TODO color of projection is function of lights
     solid.color = this.color
     solid.name = 'projection ' + this.name + '|P' + axe + '|'
+    return [solid]
+  }
+
+  /**
+   *
+   * @param {*} axe
+   * @todo for the moment, project the silhouette, need to project differents faces
+   * @todo vérifier que clonedeep est utile
+   * @return {array} solids
+   */
+  axeCut (axe) {
+    this.ensureFaces()
+    const _t = this
+
+    const halfspaces = [..._t.createAxeCutSilhouette(axe)].map(face =>
+      Solid.silProject(face, axe)
+    )
+    // TODO: trouver d'où peut provenir cette HS à 0
+    // TODO: retrouver la fonction de vérif à 0
+    // const halfspacesf = halfspaces.filter(eq => eq.find(x => { return x > P.VERY_SMALL_NUM || x < -P.VERY_SMALL_NUM }))
+    // console.log('halfspaces')
+    // console.table(halfspacesf)
+    // const halfspaces = [..._t.axeCutsilhouettes[axe]].map(face =>
+    //  Solid.silProject(face, axe)
+    // )
+    const dim = this.dimension - 1
+    const solid = new Solid(dim, halfspaces)
+
+    solid.color = this.color
+    solid.name = 'axe cut ' + this.name + '|P' + axe + '|'
     return [solid]
   }
 

@@ -73,9 +73,8 @@ class Group extends NDObject {
    * @todo vérifrie que mutation nécessaire
    * @returns face this
    */
-  transform (matrix) {
-    const center = this.middleOf()
-    // TODO: attention au centre de rotatation de chaque objet
+  transform (matrix, center) {
+    // const centerp = this.middleOf()
     this.objectList.forEach(idx => {
       const object = this.space.solids.get(idx)
       object.transform(matrix, center)
