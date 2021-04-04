@@ -126,7 +126,11 @@ class Face extends NDObject {
   transform (matrix) {
     //
     //  The normal of the tranformed halfspace can be found with a simple matrix
-    //  multiplication.  The constant is more difficult.  Here I have solved this
+    //  multiplication.
+    const coords = multiplyMatrices(matrix, this.equ.slice(0, -1))
+
+   // console.error('trans', this.equ, coords )
+    // The constant is more difficult.  Here I have solved this
     //  by finding a point on the original halfspace (by checking axes for intersections)
     //  and transforming that point as well.  The transformed point lies on the
     //  transformed halfspace, so the constant term can be computed by plugging the
@@ -137,13 +141,18 @@ class Face extends NDObject {
 
     // get non 0 coordinate
     const coordindex = this.equ.findIndex(x => Math.abs(x) > P.VERY_SMALL_NUM)
+   /* let max = 0
+    let coordindex = false
+    for (let index = 0; index < this.equ.length - 1; index++) {
+      if (this.equ[index] > max) {
+        max = this.equ[index]
+        coordindex = index
+      }
+    } 
+    */
     // TODO vérifier si utilisaton not small_value x!=0
-    const intercept =
-      -getConstant(this.equ) / getCoordinate(this.equ, coordindex)
-
-    const coords = multiplyMatrices(matrix, this.equ.slice(0, -1))
-
-    //
+    // const intercept = -getConstant(this.equ) / getCoordinate(this.equ, coordindex)
+    const intercept = -getConstant(this.equ) / getCoordinate(this.equ, coordindex) // max
     //  At this point we have found a point on the halfspace.  This point is
     //  (0, 0, ..., intercept, ..., 0, 0), where intercept is the ith coordinate
     //  and all other coordinates are 0.  Since this is a highly sparse and
@@ -160,7 +169,6 @@ class Face extends NDObject {
     for (let i = 0; i < n; i++) {
       sum += matrix[i][coordindex] * intercept * coords[i]
     }
-
     this.equ = [...coords, -sum]
     return this
   }
@@ -171,7 +179,7 @@ class Face extends NDObject {
    * @returns boolean if it is a backface
    */
   isBackFace (axe) {
-    return this.orientation(axe) < P.VERY_SMALL_NUM
+    return this.orientation(axe) < 0
   }
 
   /**
@@ -191,6 +199,7 @@ class Face extends NDObject {
    * @param {*} point
    * @param {*} axe
    * @returns boolean if point is valid to be used for order
+   * TODO: comprendre pourquoi ce n'est pas utilisé
    */
   validForOrder (point, axe) {
     return !this.pointInsideFace(point) && this.orientation(axe) !== 0
