@@ -57,8 +57,10 @@ class Space {
       space.suffixSolid(Solid.importFromJSON(solid))
     })
     if (json.groups) {
-      ;[...json.groups].forEach(group => {
-        space.suffixGroup(Group.importFromJSON(group, space))
+      ;[...json.groups].forEach(agroup => {
+        const group = Group.importFromJSON(agroup, space)
+        console.log('group', group)
+        space.suffixGroup(group)
       })
     }
     // space.groups
@@ -73,10 +75,10 @@ class Space {
    * @param {*} solid
    */
   suffixGroup (grp) {
-    const id = grp.id === 0 ? this.newOjectId() : grp.id
+    // const id = grp.id === 0 ? this.newOjectId() : grp.id
     // console.log("suffix group ", grp.id)
     // console.log("solid id", id)
-    this.groups.set(id, grp)
+    this.groups.set(grp.uuid, grp)
   }
 
   /**
@@ -84,8 +86,9 @@ class Space {
    * @param {*} solid
    */
   suffixSolid (solid) {
-    const id = solid.id === 0 ? this.newOjectId() : solid.id
-    this.solids.set(id, solid)
+    // const id = solid.id === 0 ? this.newOjectId() : solid.id
+    // solid.id = id
+    this.solids.set(solid.uuid, solid)
   }
 
   /**
@@ -128,23 +131,63 @@ class Space {
   }
   */
 
+  trigSolid (uuid) {
+    let foundInGroup = false
+    this.groups.forEach(grp => {
+      if (grp.objectList.has(uuid)) {
+        foundInGroup = true
+        console.log('found in group')
+        grp.selected = !grp.selected
+        grp.objectList.forEach(solUuid => {
+          const solid = this.solids.get(solUuid)
+          console.log('add solid', solUuid, solid )
+          solid.selected = !solid.selected
+        })
+      }
+    })
+    if (!foundInGroup) {
+      const solid = this.solids.get(uuid)
+      if (solid) {
+        console.log('add solid', uuid, solid )
+        solid.selected = !solid.selected
+      }
+    }
+  }
+
   /**
    *
    * @param {*} matrix
    * @param {*} force
    */
   transform (matrix, center = true, force = false) {
-    if (this.groups.size === 0) {
+    // if (this.groups.size === 0) {
+    let allSelected = true
+    let done = false
+    this.solids.forEach(solid => {
+      if (solid.selected) { allSelected = false }
+    })
+    this.groups.forEach(grp => {
+      if (grp.selected || allSelected) {
+        done = true
+        const centerptg = center ? grp.middleOf() : [0, 0, 0, 0]
+        grp.transform(matrix, centerptg, force)
+      }
+    })
+    if (!done) {
       this.solids.forEach(solid => {
-        const centerpt = center ? solid.middleOf() : [0, 0, 0, 0]
-        solid.transform(matrix, centerpt, force)
+        if (allSelected || solid.selected) {
+          const centerpt = center ? solid.middleOf() : [0, 0, 0, 0]
+          solid.transform(matrix, centerpt, force)
+        }
       })
-    } else {
+    }
+  /*  } else {
       this.groups.forEach(group => {
         const centerptg = center ? group.middleOf() : [0, 0, 0, 0]
         group.transform(matrix, centerptg, force)
       })
     }
+    */
   }
 
   /**
@@ -153,15 +196,16 @@ class Space {
    * @param {*} force
    */
   translate (vector, force = false) {
-    if (this.groups.size === 0) {
-      this.solids.forEach(solid => {
+    // if (this.groups.size === 0) {
+    let allSelected = true
+    this.solids.forEach(solid => {
+      if (solid.selected) { allSelected = false }
+    })
+    this.solids.forEach(solid => {
+      if (allSelected || solid.selected) {
         solid.translate(vector, force)
-      })
-    } else {
-      this.groups.forEach(group => {
-        group.translate(vector)
-      })
-    }
+      }
+    })
   }
 
   /**

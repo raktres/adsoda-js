@@ -7,6 +7,7 @@
 
 import { NDObject } from './ndobject.js'
 import { Face } from './face.js'
+import { v4 as uuidv4 } from 'uuid'
 import {
   projectVector,
   isCornerEqual,
@@ -48,6 +49,7 @@ class Solid extends NDObject {
       halffiltered.forEach(HS => _t.suffixFace(new Face(HS)))
       this.ensureFaces()
     }
+    this.uuid = uuidv4()
   }
 
   clone () {
@@ -169,10 +171,8 @@ class Solid extends NDObject {
     const _t = this
     this.faces = [...this.faces].filter(
       face =>
-        face.isRealFace() &&
-        [...face.touchingCorners].find(
-          corner => _t.isPointInsideOrOnSolid(corner)
-        )
+      // TODO: vérifier le fonctionnement des filtres de face
+        face.isRealFace() && [...face.touchingCorners].find( corner => _t.isPointInsideOrOnSolid(corner))
     )
   }
 
@@ -350,6 +350,7 @@ class Solid extends NDObject {
     this.computeAdjacencies()
     // console.table(this.adjacentRefs)
     // Face.updateAdjacentFacesRefs(this.faces, facesref, corner)
+    // TODO: erreur dans certains cas
     const nba = this.faces.length
     this.filterRealFaces()
     if (this.faces.length !== nba) {
@@ -513,7 +514,9 @@ class Solid extends NDObject {
     const solid = new Solid(dim, halfspaces)
     // TODO color of projection is function of lights
     solid.color = this.color
+    solid.selected = this.selected
     solid.name = 'projection ' + this.name + '|P' + axe + '|'
+    solid.parentUuid = this.uuid
     return [solid]
   }
 
@@ -543,7 +546,9 @@ class Solid extends NDObject {
     const solid = new Solid(dim, halfspaces)
 
     solid.color = this.color
+    solid.selected = this.selected
     solid.name = 'axe cut ' + this.name + '|P' + axe + '|'
+    solid.parentUuid = this.uuid
     return [solid]
   }
 

@@ -33,9 +33,9 @@ describe('space test', () => {
     expect([...space1.solids].length).toEqual(2)
     space1.suffixSolid(sfr)
     // expect([...space1.solids].length).toEqual(2)
-    expect([...space1.solids].length).toEqual(3)
+    expect([...space1.solids].length).toEqual(2)
     space1.suffixSolid(sfg)
-    expect([...space1.solids].length).toEqual(4)
+    expect([...space1.solids].length).toEqual(3)
   })
 
   test('space project', () => {
@@ -43,6 +43,7 @@ describe('space test', () => {
     const spaceP0 = space1.project(0)
     expect(spaceP0.dimension).toEqual(1)
     spaceP0.ensureSolids()
+    console.error('space0',spaceP0)
     expect([...spaceP0.solids].length).toEqual(4)
 
     const spaceP2 = space1.project(1)

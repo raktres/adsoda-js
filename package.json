@@ -82,5 +82,7 @@
       "text"
     ]
   },
-  "dependencies": {}
+  "dependencies": {
+    "uuid": "^8.3.2"
+  }
 }

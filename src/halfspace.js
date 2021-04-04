@@ -17,10 +17,55 @@ import * as P from './parameters'
 // |_______________________________________________________________________________________
 
 // dot product of 2 vectors
-// function matdot (ar1, ar2) {
-//  return ar1.reduce((acc, component, index) => acc + component * ar2[index], 0)
-// }
-function matdot (vector1, vector2) {
+// function matdot (ar1, ar2) { return ar1.reduce((acc, component, index) => acc + component * ar2[index], 0)}
+/**
+ * multiplication de deux matrices
+ * @param {*} m1
+ * @param {*} m2
+ */
+export function multiplyMatrices (m1, m2) {
+  const result = []
+  for (let i = 0; i < m2.length; i++) {
+    let res = 0
+    for (let j = 0; j < m1[0].length; j++) {
+      res += m2[j] * m1[i][j]
+    }
+    result.push(res)
+  }
+  return result
+}
+/**
+ * soustraction de deux vecteurs
+ * on suppose que les deux vecteurs ont la même taille
+ * @param {*} a
+ * @param {*} b
+ */
+export function subtract (a, b) {
+  const res = []
+  for (let j = 0; j < a.length; j++) {
+    res.push(a[j] - b[j])
+  }
+  return res
+}
+
+/**
+ * calcule la norme d'un vecteur
+ * @param {*} a
+ */
+export function matnorm (a) {
+  let res = 0
+  for (let j = 0; j < a.length; j++) {
+    res += a[j] * a[j]
+  }
+  return Math.sqrt(res)
+}
+
+/**
+ * produit scalaire de deux vecteurs
+ * @param {*} vector1
+ * @param {*} vector2
+ */
+export function matdot (vector1, vector2) {
   let result = 0
   for (let i = 0; i < vector1.length; i++) {
     result += vector1[i] * vector2[i]
@@ -28,18 +73,21 @@ function matdot (vector1, vector2) {
   return result
 }
 
-export function normalize (vect) {
-  const normVect = vect.slice(0, vect.length - 1)
-  // console.log('hp',vect, 'normal vect', normVect)
-  const length = Math.sqrt(normVect.reduce((acc, cur) => acc + cur * cur, 0))
-  const res = vect.map(x => x / length)
-  // console.log('hp',vect, 'normal vect', normVect, 'norm',length, 'result normalisé', res)
-  // console.error(vect,res)
-  return res
+/**
+ * normalise un descripteur d'hyperplan
+ * @param {*} HS
+ */
+export function normalize (HS) {
+  let sum = 0
+  for (let index = 0; index < HS.length - 1; index++) {
+    sum += HS[index] * HS[index]
+  }
+  const length = Math.sqrt(sum)
+  return HS.map(x => x / length)
 }
 
 /**
- *
+ * TODO: détailler
  * @param {*} matrix
  * @returns echelon matrix
  */
@@ -98,15 +146,16 @@ export function echelon (matrix) {
  *
  * @param {*} matrix
  * @returns matrix
+ * TODO: vérifier si on doit controler une valeur petite ou une valeur nulle
  */
 export function nonZeroRows (matrix) {
   return matrix.filter(
-    row => row.find(val => !(val < P.VERY_SMALL_NUM && val > -P.VERY_SMALL_NUM))
-)
+    row => row.find(val => val !== 0)
+  )
 }
 
 /**
- *
+ * TODO: décrire
  * @param {*} matrix
  * @returns vector solution of the system
  * TODO: remplacer map
@@ -145,7 +194,7 @@ export function getCoordinate (halfspace, i) {
  * @param {*} x
  */
 export function constantAdd (u, x) {
-  return [...u.slice(0, -1), getConstant(u) - x]
+  u[u.length - 1] -= x
 }
 
 /**
@@ -186,7 +235,6 @@ export function intersectHyperplanes (hyperplanes) {
  * @param {*} a
  * @param {*} b
  * @returns array of compositions
- * @todo memoize
  */
 export function amongIndex (l, a, b) {
   const extract = [[]]
@@ -216,56 +264,33 @@ export const moizeAmongIndex = moize(amongIndex)
  * @param {*} corner2
  */
 export function isCornerEqual (corner1, corner2, diff = P.VERY_SMALL_NUM) {
-  if (corner1 instanceof Array && corner2 instanceof Array) {
-    for (let i = 0; i < corner1.length; i++) {
-      if (Math.abs(corner1[i] - corner2[i]) > diff) {
-        return false
-      }
-    }
-    return true
-  } else {
-    return Math.abs(corner1 - corner2) < P.VERY_SMALL_NUM
-  }
-}
-
-export function isHPEqual (hp1, hp2, diff = P.VERY_SMALL_NUM) {
-  // if (corner1 instanceof Array && corner2 instanceof Array) {
-  const hpn1 = normalize(hp1)
-  const hpn2 = normalize(hp2)
-  for (let i = 0; i < hpn1.length; i++) {
-    if (Math.abs(hpn1[i] - hpn2[i]) > diff) {
+  for (let i = 0; i < corner1.length; i++) {
+    if (Math.abs(corner1[i] - corner2[i]) > diff) {
       return false
     }
   }
   return true
 }
+
+export function isHPEqual (hp1, hp2, diff = P.VERY_SMALL_NUM) {
+  return isCornerEqual(normalize(hp1), normalize(hp2), diff)
+}
 /**
  * TODO: pas utile
  * @param {*} corner1
  * @param {*} corner2
+ * TODO: 
  */
 export function vectorFromPoints (corner1, corner2) {
-  return corner1.map(function (item, index) {
-    // In this case item correspond to currentValue of array a,
-    // using index to get value from array b
-    return item - corner2[index]
-  })
-}
-
-// TODO: pas utile
-export function vectorsFromPoints (pointsArray) {
-  const pointA = pointsArray[0]
-  return pointsArray.slice(1).map(el => {
-    return vectorFromPoints(pointA, el)
-  })
+  return subtract(corner1, corner2)
 }
 
 export function findnormal (pointsArray) {
   const mat = pointsArray.map(el => el.concat(1))
   const ech = echelon(mat)
   const isnull = ech.find((element, idx) => {
-    const valdiag = element[idx]
-    return valdiag < P.VERY_SMALL_NUM && valdiag > -P.VERY_SMALL_NUM
+    // valdiag < P.VERY_SMALL_NUM && valdiag > -P.VERY_SMALL_NUM
+    return element[idx] === 0
   })
   if (isnull) { return false }
   const res = ech.map(el => el.slice(-1)[0])

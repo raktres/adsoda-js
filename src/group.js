@@ -6,12 +6,14 @@
  */
 
 import { NDObject } from './ndobject.js'
+import { v4 as uuidv4 } from 'uuid'
 
 class Group extends NDObject {
   constructor ( objects ) {
     super('Group')
     this.space =  ''
     this.objectList = new Set()
+    this.uuid = uuidv4()
     if (objects) this.objectList = objects
   }
 
@@ -28,8 +30,21 @@ class Group extends NDObject {
    */
   static importFromJSON (json, space) {
     const grp = new Group()
-    grp.id = json.id || 0
-    json.refs.forEach(sol => grp.objectList.add(sol))
+    // grp.id = json.id || 0
+    const solids = new Map()
+    console.log('space solids', space.solids)
+    space.solids.forEach(sol => {
+      console.log('solid', sol)
+      if (sol.id) {
+        solids.set(sol.id, sol.uuid)
+      }
+    })
+    console.log('map',solids)
+    json.refs.forEach(sol => {
+      const solUuid = solids.get(sol)
+      grp.objectList.add(solUuid)
+    })
+    console.log('grp',grp.objectList)
     grp.space = space
     return grp
   }

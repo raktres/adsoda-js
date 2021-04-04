@@ -8,7 +8,7 @@ describe('Face test', () => {
     const face = new Face([1, 2, 3])
 
     face.flip()
-    expect([...face.equ]).toEqual([-1, -2, -3])
+    expect([...face.equ]).toEqual([-0.4472135954999579, -0.8944271909999159, -1.3416407864998738])
   })
   test('faceOrientation 1', () => {
     const face = new Face([1, 2, 3])
@@ -56,9 +56,7 @@ describe('Face test', () => {
   test('translate', () => {
     const face = new Face([1, 2, 3])
     face.translate([1, 1])
-    expect(face.equ[0]).toEqual(1)
-    expect(face.equ[1]).toEqual(2)
-    expect(face.equ[2]).toEqual(0)
+    expect(face.equ).toEqual([0.4472135954999579, 0.8944271909999159, 0])
   })
   test('is real face', () => {
     const face = new Face([1, 2, -3])

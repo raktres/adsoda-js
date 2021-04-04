@@ -13,46 +13,14 @@ import {
   getCoordinate,
   getConstant,
   moizeAmongIndex,
-  normalize
+  normalize,
+  multiplyMatrices,
+  subtract,
+  matnorm,
+  matdot
 } from './halfspace.js'
 import { NDObject } from './ndobject.js'
 import * as P from './parameters'
-
-function multiplyMatrices (m1, m2) {
-  const result = []
-  for (let i = 0; i < m2.length; i++) {
-    let res = 0
-    for (let j = 0; j < m1[0].length; j++) {
-      res += m2[j] * m1[i][j]
-    }
-    result.push(res)
-  }
-  return result
-}
-
-function subtract (a, b) {
-  const res = []
-  for (let j = 0; j < a.length; j++) {
-    res.push(a[j] - b[j])
-  }
-  return res
-}
-
-function matnorm (a) {
-  let res = 0
-  for (let j = 0; j < a.length; j++) {
-    res += a[j] * a[j]
-  }
-  return Math.sqrt(res)
-}
-
-function matdot (vector1, vector2) {
-  let result = 0
-  for (let i = 0; i < vector1.length; i++) {
-    result += vector1[i] * vector2[i]
-  }
-  return result
-}
 
 function cross3d (x, y) {
   const [x1, x2, x3] = Array.from(x)
@@ -70,10 +38,9 @@ class Face extends NDObject {
    * @constructor Face
    * @param {*} vector
    */
-
   constructor (vector) {
     super('Face')
-    this.equ = vector.map(parseFloat)
+    this.equ = normalize(vector.map(parseFloat))
     this.touchingCorners = []
     this.adjacentRefs = new Set()
     this.dim = this.equ.length - 1
@@ -146,7 +113,7 @@ class Face extends NDObject {
     //
 
     const dot = matdot(this.equ.slice(0, -1), vector)
-    this.equ = constantAdd(this.equ, dot)
+    constantAdd(this.equ, dot)
     return this
   }
 
@@ -340,15 +307,14 @@ class Face extends NDObject {
     if (!outPoint) return false
 
     const outPointProj = projectVector(outPoint, axe)
+    // let diffEqProj = projectVector(diffEq, axe)
     let diffEqProj = projectVector(diffEq, axe)
-
     if (positionPoint(diffEqProj, outPointProj) > P.VERY_SMALL_NUM) {
       diffEqProj = diffEqProj.map(x => -x)
     }
 
     const nFace = new Face(diffEqProj)
     nFace.name = `proj de ${this.equ} selon ${axe} `
-
     return nFace
     // TODO return false si pas bon
   }
@@ -418,7 +384,8 @@ class Face extends NDObject {
     const tF = this.pvFactor(axe)
     const aEq = [...adjaFace.equ].map(x => x * tF)
     const tEq = [...this.equ].map(x => x * aF)
-    const diffEq = normalize(subtract(aEq, tEq))
+    // TODO: normalize dans Face
+    const diffEq = subtract(aEq, tEq)
     const nFace = new Face(diffEq)
     nFace.name = `cut de ${this.equ} pour ${axe} = 0 `
     return nFace
