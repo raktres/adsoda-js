@@ -34,6 +34,15 @@ export function multiplyMatrices (m1, m2) {
   }
   return result
 }
+
+/**
+ * flix
+ * @param {*} equ 
+ */
+export function flip (equ) {
+  return equ.map(coord => -coord)
+}
+
 /**
  * soustraction de deux vecteurs
  * on suppose que les deux vecteurs ont la même taille
@@ -264,12 +273,16 @@ export const moizeAmongIndex = moize(amongIndex)
  * @param {*} corner2
  */
 export function isCornerEqual (corner1, corner2, diff = P.VERY_SMALL_NUM) {
-  for (let i = 0; i < corner1.length; i++) {
-    if (Math.abs(corner1[i] - corner2[i]) > diff) {
-      return false
+  if (corner1 instanceof Array && corner2 instanceof Array) {
+    for (let i = 0; i < corner1.length; i++) {
+      if (Math.abs(corner1[i] - corner2[i]) > diff) {
+        return false
+      }
     }
+    return true
+  } else {
+    return Math.abs(corner1 - corner2) < diff
   }
-  return true
 }
 
 export function isHPEqual (hp1, hp2, diff = P.VERY_SMALL_NUM) {

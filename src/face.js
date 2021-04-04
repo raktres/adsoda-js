@@ -17,7 +17,8 @@ import {
   multiplyMatrices,
   subtract,
   matnorm,
-  matdot
+  matdot,
+  flip
 } from './halfspace.js'
 import { NDObject } from './ndobject.js'
 import * as P from './parameters'
@@ -211,7 +212,7 @@ class Face extends NDObject {
    * @todo évaluer l'impact de l'utilisation  de ...
    */
   flip () {
-    this.equ = this.equ.map(coord => -coord)
+    this.equ = flip(this.equ)
   }
 
   /**
@@ -319,7 +320,7 @@ class Face extends NDObject {
     // let diffEqProj = projectVector(diffEq, axe)
     let diffEqProj = projectVector(diffEq, axe)
     if (positionPoint(diffEqProj, outPointProj) > P.VERY_SMALL_NUM) {
-      diffEqProj = diffEqProj.map(x => -x)
+      diffEqProj = flip(diffEqProj)
     }
 
     const nFace = new Face(diffEqProj)
