@@ -75,9 +75,6 @@ class Space {
    * @param {*} solid
    */
   suffixGroup (grp) {
-    // const id = grp.id === 0 ? this.newOjectId() : grp.id
-    // console.log("suffix group ", grp.id)
-    // console.log("solid id", id)
     this.groups.set(grp.uuid, grp)
   }
 
@@ -86,8 +83,6 @@ class Space {
    * @param {*} solid
    */
   suffixSolid (solid) {
-    // const id = solid.id === 0 ? this.newOjectId() : solid.id
-    // solid.id = id
     this.solids.set(solid.uuid, solid)
   }
 
@@ -101,17 +96,16 @@ class Space {
    *
    */
   clearSolids () {
-    this.solids.clear() // clear()
+    this.solids.clear()
   }
 
   /**
    * TODO:
    */
-  /*
   clearGroups () {
-    this.Groups.length = 0 // clear()
+    this.Groups.clear()
   }
-*/
+
   /**
    * @todo confirmer que affectation pas utile
    */
@@ -215,12 +209,12 @@ class Space {
    */
   removeHiddenSolids (axe) {
     const _tsolids = [...this.solids]
-    const listOfSolids = _tsolids.map(solid => [solid.clone()]) // clonedeep
+    const listOfSolids = _tsolids.map(solid => [solid.clone()])
     for (let ind = 0; ind < _tsolids.length; ind++) {
       const tempSol = _tsolids[ind]
       for (let i = 0; i < listOfSolids.length; i++) {
         if (i !== ind) {
-          const tempLOS = listOfSolids[i].clone() // clonedeep
+          const tempLOS = listOfSolids[i].clone()
           const tempList = tempSol.solidsSilhouetteSubtract(tempLOS, axe)
           listOfSolids[i] = tempList
         }
@@ -289,21 +283,6 @@ class Space {
     return solids
   }
 
-
-  /**
-   *
-   * @param {*} hyperplane
-   */
-  sliceProjectSolids (hyperplane) {
-    const projs = []
-    this.solids.forEach((val, key) => {
-      const slice = val.sliceProject(hyperplane)
-      if (slice[0]) projs.push(slice[0])
-    })
-    // const solids = projs.reduce((solflat, item) => solflat.concat(item), [])
-    return projs
-  }
-
   /**
    * Project space following axe
    * @param {*} axe for the moment, just the index of axe
@@ -339,15 +318,7 @@ class Space {
    * @param {*} hyperplane for the moment, just the index of axe
    * @returns space
    */
-  sliceProject (hyperplane) {
-    // if (REMOVE_HIDDEN)
-    const space = new Space(this.dimension - 1)
-    space.name = this.projectName('slice'.hyperplane)
-    // TODO il faut que project solids utilise filteredSolids
-    const solidarray = this.sliceProjectSolids(hyperplane)
-    solidarray.forEach(solid => space.suffixSolid(solid))
-    return space
-  }
+  sliceProject (hyperplane) { }
 
   /**
    * @todo write

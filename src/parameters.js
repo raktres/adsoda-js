@@ -13,5 +13,4 @@ export const MAX_FACE_PER_CORNER = 16
 /**
  * @constant
  */
-export const VERY_SMALL_NUM = 0.00001
-export const VERY_SMALL_DIST = 0.00001
+export const VERY_SMALL_NUM = 0.0000001

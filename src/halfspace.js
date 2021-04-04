@@ -284,15 +284,18 @@ export function isCornerEqual (corner1, corner2, diff = P.VERY_SMALL_NUM) {
     return Math.abs(corner1 - corner2) < diff
   }
 }
-
+/**
+ * compare two HP
+ * @param {*} hp1
+ * @param {*} hp2
+ * @param {*} diff
+ */
 export function isHPEqual (hp1, hp2, diff = P.VERY_SMALL_NUM) {
   return isCornerEqual(normalize(hp1), normalize(hp2), diff)
 }
 /**
- * TODO: pas utile
  * @param {*} corner1
  * @param {*} corner2
- * TODO: 
  */
 export function vectorFromPoints (corner1, corner2) {
   return subtract(corner1, corner2)
@@ -302,7 +305,6 @@ export function findnormal (pointsArray) {
   const mat = pointsArray.map(el => el.concat(1))
   const ech = echelon(mat)
   const isnull = ech.find((element, idx) => {
-    // valdiag < P.VERY_SMALL_NUM && valdiag > -P.VERY_SMALL_NUM
     return element[idx] === 0
   })
   if (isnull) { return false }

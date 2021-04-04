@@ -237,7 +237,7 @@ class Solid extends NDObject {
     // Attention mutation de this et retour d'un nouveau solide
     // vérifier que c'est bon
     const equ = [...face.equ]
-    const solid1 = this.clone() // cloneDeep(this);
+    const solid1 = this.clone()
     solid1.name = this.name + '/outer/'
 
     const flipEqu = equ.map(coord => -coord)
@@ -348,8 +348,6 @@ class Solid extends NDObject {
   findAdjacencies () {
     this.eraseOldAdjacencies()
     this.computeAdjacencies()
-    // console.table(this.adjacentRefs)
-    // Face.updateAdjacentFacesRefs(this.faces, facesref, corner)
     // TODO: erreur dans certains cas
     const nba = this.faces.length
     this.filterRealFaces()
@@ -415,7 +413,7 @@ class Solid extends NDObject {
     sil.forEach((face, idx) => {
       let res = true
       for (let index = idx + 1; index < nb; index++) {
-        if (isHPEqual(face.equ, sil[index].equ, P.VERY_SMALL_NUM)) { // isCornerEqual
+        if (isHPEqual(face.equ, sil[index].equ, P.VERY_SMALL_NUM)) {
           res = false
           break
         }
@@ -443,7 +441,7 @@ class Solid extends NDObject {
     solid1.name = this.name + '/ cut /'
     // attention ! le plan de coupe peut déjà être une face du solide
     let cface = solid1.faces.find(face => {
-      return isHPEqual(hype, face.equ, 0) // || isHPEqual(hype, face.equ.map(x => -x), 0)
+      return isHPEqual(hype, face.equ, 0)
     })
     if (!cface) {
       cface = new Face(hype)
@@ -456,14 +454,13 @@ class Solid extends NDObject {
 
     const sil = cface.cutSilhouette(axe, sFaces, this.center)
     // TODO: reprendre
-  
     const nb = sil.length
     const filteredSil = []
     // recherche de faces en doublon
     sil.forEach((face, idx) => {
       let res = true
       for (let index = idx + 1; index < nb; index++) {
-        if (isCornerEqual(face.equ, sil[index].equ, P.VERY_SMALL_DIST)) {
+        if (isCornerEqual(face.equ, sil[index].equ, P.VERY_SMALL_NUM)) {
           res = false
           break
         }
@@ -549,34 +546,6 @@ class Solid extends NDObject {
     solid.selected = this.selected
     solid.name = 'axe cut ' + this.name + '|P' + axe + '|'
     solid.parentUuid = this.uuid
-    return [solid]
-  }
-
-  /**
-   *
-   * @param {*} hyperplane
-   * @todo reprendre l'axe de projection
-   */
-  sliceProject (hyperplane) {
-    const projSol = this.clone()
-    const projFace = new Face(hyperplane)
-    projSol.addFace(projFace)
-    projSol.ensureFaces()
-    const point = projFace.touchingCorners[0]
-    if (!projSol.isPointInsideOrOnSolid(point)) {
-      console.log('not real face')
-      return []
-    }
-    // TODO: this.center pas défini !!!
-    const sil = projFace.forceSilhouette(2, this.faces, this.center)
-    // TODO: verif
-    let halfspaces = [...sil].map(face => Solid.silProject(face, 2))
-    halfspaces = uniqBy(halfspaces, JSON.stringify)
-    const dim = projSol.dimension - 1
-    const solid = new Solid(dim, halfspaces)
-    // TODO color of projection is function of lights
-    solid.color = projSol.color
-    solid.name = projSol.name + '|Pcut|'
     return [solid]
   }
 
@@ -693,16 +662,16 @@ class Solid extends NDObject {
 
   /**
    * subtract this to the solid in parameter
-   * @param {*} zzzz
+   * @param {*}
    * @returns an array of solids representing the substraction
    * @todo vérifier s'il ne faut pas une fonction qui soustrait des solides
    * @todo évaluer l'impact du clone de faces
    */
   subtract (faces) {
-    const newsolid = this.clone() // cloneDeep(this);
+    const newsolid = this.clone()
     newsolid.ensureFaces()
     // TODO supprimer
-    const clonefaces = faces // cloneDeep(faces);
+    const clonefaces = faces
     const subsolids = clonefaces
       .reduce((subsolids, face) => {
         return [...subsolids, newsolid.sliceWith(face)]
@@ -711,7 +680,7 @@ class Solid extends NDObject {
 
     // TODO pas sur utile de recalculer les éléments
     subsolids.forEach(solidei => {
-      solidei.unvalidSolid() // adjacenciesValid = false;
+      solidei.unvalidSolid()
       solidei.ensureFaces()
       solidei.ensureSilhouettes()
     })

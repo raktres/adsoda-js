@@ -548,10 +548,10 @@ describe( 'Solid test', () => {
 
     // expect(8).toEqual(8)
     // const pr0 = 
-    console.log( sol.project( 0 )[0].corners )
-    console.log( sol.project( 1 )[0].corners )
-    console.log( sol.project( 2 )[0].corners )
-    console.log( sol.project( 2 )[0].faces )
+    // console.log( sol.project( 0 )[0].corners )
+    // console.log( sol.project( 1 )[0].corners )
+    // console.log( sol.project( 2 )[0].corners )
+    // console.log( sol.project( 2 )[0].faces )
 
     let d = 17
     let a = ( d * Math.PI ) / 180

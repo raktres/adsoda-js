@@ -23,6 +23,11 @@ import {
 import { NDObject } from './ndobject.js'
 import * as P from './parameters'
 
+/**
+ * 3D specific function
+ * @param {*} x 
+ * @param {*} y 
+ */
 function cross3d (x, y) {
   const [x1, x2, x3] = Array.from(x)
   const [y1, y2, y3] = Array.from(y)
@@ -130,7 +135,7 @@ class Face extends NDObject {
     //  multiplication.
     const coords = multiplyMatrices(matrix, this.equ.slice(0, -1))
 
-   // console.error('trans', this.equ, coords )
+    // console.error('trans', this.equ, coords )
     // The constant is more difficult.  Here I have solved this
     //  by finding a point on the original halfspace (by checking axes for intersections)
     //  and transforming that point as well.  The transformed point lies on the
@@ -142,14 +147,14 @@ class Face extends NDObject {
 
     // get non 0 coordinate
     const coordindex = this.equ.findIndex(x => Math.abs(x) > P.VERY_SMALL_NUM)
-   /* let max = 0
+    /* let max = 0
     let coordindex = false
     for (let index = 0; index < this.equ.length - 1; index++) {
       if (this.equ[index] > max) {
         max = this.equ[index]
         coordindex = index
       }
-    } 
+    }
     */
     // TODO vérifier si utilisaton not small_value x!=0
     // const intercept = -getConstant(this.equ) / getCoordinate(this.equ, coordindex)
@@ -317,7 +322,6 @@ class Face extends NDObject {
     if (!outPoint) return false
 
     const outPointProj = projectVector(outPoint, axe)
-    // let diffEqProj = projectVector(diffEq, axe)
     let diffEqProj = projectVector(diffEq, axe)
     if (positionPoint(diffEqProj, outPointProj) > P.VERY_SMALL_NUM) {
       diffEqProj = flip(diffEqProj)
@@ -330,30 +334,13 @@ class Face extends NDObject {
   }
 
   /**
-   * @todo remove use of clonedeep
-   * @returns array array of faces
-   */
-  /*
-  intersectionsIntoFaces () {
-    const face = this // cloneDeep(this);
-    let faces = []
-    this.tempAdja.forEach(element => {
-    })
-    const faces =
-    [...face.adjacentFaces].map[
-      _face => _face.intersectionIntoFace() // pas bon, manque tface
-    ].filter(fac => fac)
-    return [...faces]
-  }
-*/
-  /**
    *
    * @param {*} adjaFace
    * @param {*} axe
    * @returns face face
    * TODO: ne plus utiliser des faces, seulement des HP
    */
-  intersectionIntoSilhouetteFace (adjaFace, axe, center) {
+  intersectionIntoSilhouetteFace (adjaFace, axe) {
     const aF = adjaFace.pvFactor(axe)
     const tF = this.pvFactor(axe)
     const aEq = [...adjaFace.equ].map(x => x * tF)
@@ -371,11 +358,9 @@ class Face extends NDObject {
     // const outPoint = aTC.find(point => !tTC.find(pt => isCornerEqual(pt, point)))
     const outPoint = aTC.find(point => !_t.isPointOnFace(point))
     if (!outPoint) return false
-    // use center !!
 
     const nFace = new Face(diffEq)
     // flip the face if point is not inside
-    // if (!nFace.isPointInsideFace(center)) {
     if (!nFace.isPointInsideFace(outPoint)) {
       nFace.flip()
     }
@@ -409,7 +394,7 @@ class Face extends NDObject {
    * TODO: mettre plutot dans sihouette
    * TODO: pourquoi passer par des faces ?
    */
-  silhouette (axe, faces, center) {
+  silhouette (axe, faces) {
     if (this.isBackFace(axe)) {
       return false
     }
@@ -422,7 +407,7 @@ class Face extends NDObject {
       // Just keep backface to get visible edge ;
       if (faces[element].isBackFace(axe)) {
         // TODO: ne plus utiliser des faces, seulement des HP
-        const nface = newFace.intersectionIntoSilhouetteFace(faces[element], axe, center)
+        const nface = newFace.intersectionIntoSilhouetteFace(faces[element], axe)
         if (nface) {
           silFaces.push(nface)
         }
@@ -445,33 +430,7 @@ class Face extends NDObject {
   }
 
   /**
-   *
-   * @param {*} axe
-   * @returns array array of faces
-   * @todo faire converger avec silhouette
-   */
-  forceSilhouette (axe, faces, center) {
-    // if (this.isBackFace(axe)) return false;
-
-    const newFace = new Face(this.equ)
-    newFace.touchingCorners = [...this.touchingCorners]
-    const adjaFaces = []
-    // [...this.adjacentFaces]
-    this.adjacentRefs.forEach(element => {
-      adjaFaces.push(faces[element])
-    })
-    const silFaces = []
-    adjaFaces.forEach(aFace => {
-      const nface = newFace.intersectionIntoSilhouetteFace(aFace, axe, center)
-      if (nface) {
-        silFaces.push(nface)
-      }
-    })
-    return silFaces
-  }
-
-  /**
-   *
+   * 3D specific function
    *
    */
   orderedCorners () {
@@ -542,7 +501,7 @@ class Face extends NDObject {
 }
 
 /**
- *
+ * 3D specific function
  * @param {*} point1
  * @param {*} halfspace
  * @param {*} pointref
