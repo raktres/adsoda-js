@@ -59,7 +59,6 @@ class Space {
     if (json.groups) {
       ;[...json.groups].forEach(agroup => {
         const group = Group.importFromJSON(agroup, space)
-        console.log('group', group)
         space.suffixGroup(group)
       })
     }
