@@ -1,6 +1,6 @@
 {
   "name": "adsoda",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "ADSODA - Arbitrary-Dimensional Solid Object Display Algorithm - after a Greg Ferrar algorithm",
   "main": "dist/adsoda",
   "typings": "dist/adsoda",
