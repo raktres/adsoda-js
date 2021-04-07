@@ -104,22 +104,16 @@ export function normalize (HS) {
 export function echelon (matrix) {
   const nbrows = matrix.length
   const nbcolumns = matrix[0].length
-  const outmatrix = matrix.map(row =>
-    row.map(x => {
-      if (x < P.VERY_SMALL_NUM && x > -P.VERY_SMALL_NUM) {
-        return 0
-      } else {
-        return x
-      }
-    })
-  )
+  // TODO: ne devrait pas être nécessaire !!!
+  const outmatrix = matrix.map(row => row.map(x => Math.abs(x) < P.VERY_SMALL_NUM ? 0 : x))
 
   let lead = 0
   for (let k = 0; k < nbrows; k++) {
     if (nbcolumns <= lead) return outmatrix
 
     let i = k
-    while (outmatrix[i][lead] === 0) { // < P.VERY_SMALL_NUM
+    // TODO: voir pour introduire < P.VERY_SMALL_NUM
+    while (outmatrix[i][lead] === 0) {
       i++
       if (nbrows === i) {
         i = k
@@ -134,18 +128,17 @@ export function echelon (matrix) {
     outmatrix[k] = irow
 
     let val = outmatrix[k][lead]
-    for (let j = 0; j < nbcolumns; j++) {
+    // commence à lead et non à 0. Ou alors à k ?
+    for (let j = k; j < nbcolumns; j++) {
       const out = outmatrix[k][j] / val
-      // TODO: peut être pas utile
       outmatrix[k][j] = Math.abs(out) < P.VERY_SMALL_NUM ? 0 : out
-      // outmatrix[k][j] / val
     }
 
     for (let l = 0; l < nbrows; l++) {
       if (l === k) continue
       val = outmatrix[l][lead]
-      // TODO: doit être possible de commencer à lead
-      for (let j = 0; j < nbcolumns; j++) {
+      // commencer à lead et non à 0. Ou alors à k ?
+      for (let j = k; j < nbcolumns; j++) {
         const nval = outmatrix[l][j] - val * outmatrix[k][j]
         outmatrix[l][j] = Math.abs(nval) < P.VERY_SMALL_NUM ? 0 : nval
       }
