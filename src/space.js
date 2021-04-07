@@ -261,6 +261,7 @@ class Space {
     //  : [...this.solids]
     const projs = []
     this.solids.forEach((val, key) => projs.push(val.project(axe)))
+    // if (axe === 1) console.log('projs avant filtre',projs)
     const solids = projs.reduce((solflat, item) => solflat.concat(item), [])
       .filter(solid => solid.isNonEmptySolid())
     return solids
@@ -293,6 +294,7 @@ class Space {
     space.name = this.projectName(axe)
     // TODO il faut que project solids utilise filteredSolids
     const solidarray = this.projectSolids(axe)
+    // if(axe === 1 ) console.log('solidarray',solidarray)
     solidarray.forEach(solid => space.suffixSolid(solid))
     return space
   }

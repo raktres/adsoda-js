@@ -37,7 +37,7 @@ export function multiplyMatrices (m1, m2) {
 
 /**
  * flix
- * @param {*} equ 
+ * @param {*} equ
  */
 export function flip (equ) {
   return equ.map(coord => -coord)
@@ -99,6 +99,7 @@ export function normalize (HS) {
  * TODO: détailler
  * @param {*} matrix
  * @returns echelon matrix
+ * TODO: plutôt faire le contrôle de petit dans le controle du while
  */
 export function echelon (matrix) {
   const nbrows = matrix.length
@@ -118,7 +119,7 @@ export function echelon (matrix) {
     if (nbcolumns <= lead) return outmatrix
 
     let i = k
-    while (outmatrix[i][lead] === 0) {
+    while (outmatrix[i][lead] === 0) { // < P.VERY_SMALL_NUM
       i++
       if (nbrows === i) {
         i = k
@@ -135,15 +136,18 @@ export function echelon (matrix) {
     let val = outmatrix[k][lead]
     for (let j = 0; j < nbcolumns; j++) {
       const out = outmatrix[k][j] / val
-      outmatrix[k][j] = out
+      // TODO: peut être pas utile
+      outmatrix[k][j] = Math.abs(out) < P.VERY_SMALL_NUM ? 0 : out
+      // outmatrix[k][j] / val
     }
 
     for (let l = 0; l < nbrows; l++) {
       if (l === k) continue
       val = outmatrix[l][lead]
+      // TODO: doit être possible de commencer à lead
       for (let j = 0; j < nbcolumns; j++) {
-        const delta = val * outmatrix[k][j]
-        outmatrix[l][j] -= delta
+        const nval = outmatrix[l][j] - val * outmatrix[k][j]
+        outmatrix[l][j] = Math.abs(nval) < P.VERY_SMALL_NUM ? 0 : nval
       }
     }
     lead++
@@ -157,11 +161,13 @@ export function echelon (matrix) {
  * @returns matrix
  * TODO: vérifier si on doit controler une valeur petite ou une valeur nulle
  */
+/*
 export function nonZeroRows (matrix) {
   return matrix.filter(
     row => row.find(val => val !== 0)
   )
 }
+*/
 
 /**
  * TODO: décrire
@@ -176,8 +182,9 @@ export function solution (matrix) {
   for (let index = 0; index < mat1[0].length - 1; index++) {
     if (mat1[index][index] === 0) return false
   }
-  const mat2 = nonZeroRows(mat1)
-  const last = mat2.map(el => -el.slice(-1)[0])
+  // TODO: vérifier si c'est vraiment nécessaire
+  // const mat2 = nonZeroRows(mat1)
+  const last = mat1.map(el => -el.slice(-1)[0])
   return last
 }
 

@@ -497,6 +497,8 @@ class Solid extends NDObject {
    * @return {array} solids
    */
   project (axe) {
+    // attention, dans certains cas, il a fallu forcer le recalcul du solide
+    // this.unvalidSolid()
     this.ensureFaces()
     this.ensureSilhouettes()
     const _t = this
