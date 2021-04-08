@@ -294,7 +294,6 @@ class Space {
     space.name = this.projectName(axe)
     // TODO il faut que project solids utilise filteredSolids
     const solidarray = this.projectSolids(axe)
-    // if(axe === 1 ) console.log('solidarray',solidarray)
     solidarray.forEach(solid => space.suffixSolid(solid))
     return space
   }

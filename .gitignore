@@ -67,6 +67,6 @@ lib/
 out/
 npmold
 .eslintrc old.json
-dist/
+#dist/
 
 
