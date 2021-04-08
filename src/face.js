@@ -1,7 +1,7 @@
 /**
  * @file Describes ADSODA face
  * @author Jeff Bigot <jeff@raktres.net> after Greg Ferrar
- * @class Face
+ * @class  Face
  */
 
 import {
